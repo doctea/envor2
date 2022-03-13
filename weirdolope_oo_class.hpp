@@ -25,7 +25,8 @@
 
 class Envelope {
   // attack rate, amplitude change per millisec
-  using Callback = void (*)(float);
+  using SetterCallback = void (*)(float,bool);
+  using StateChangeCallback = void (*)(int, int);
 
 private:
   float AttackRateTable[9] = 
@@ -101,57 +102,89 @@ private:
   int EnvA = 0;
   int EnvB = 1;
   float EnvAlpha = 0.0f;
-  
-  static const int ENVELOPE_STATE_IDLE = 0;
-  static const int ENVELOPE_STATE_ATTACK = 1;
-  static const int ENVELOPE_STATE_DECAY = 2;
-  static const int ENVELOPE_STATE_SUSTAIN = 3;
-  static const int ENVELOPE_STATE_RELEASE = 4;
-  
+    
   float envelopeLevel = 0.0f;
   // silence the envelope when it reaches this level, well below 12 bit dac resolution.
   float envelopeStopLevel = 0.0001f;
   unsigned long nextEnvelopeUpdate = 0;
+
+  float paramValueA = 0.0f;
   
   float lerp( float y0, float y1, float alpha )
   {
       return (y1-y0)*alpha + y0;
   }
-  Callback callback;
+
+  // callback handlers
+  SetterCallback setterCallback;
+  StateChangeCallback stateChangeCallback;
 
   bool inverted = false;
 
 public:
 
+  static const int ENVELOPE_STATE_IDLE = 0;
+  static const int ENVELOPE_STATE_ATTACK = 1;
+  static const int ENVELOPE_STATE_DECAY = 2;
+  static const int ENVELOPE_STATE_SUSTAIN = 3;
+  static const int ENVELOPE_STATE_RELEASE = 4;
+
   int envelopeState = ENVELOPE_STATE_IDLE;
 
+  void begin() {
+    Serial.println("Envelope.begin()");
+    setEnvelope(0.0f);
+  }
+
   void gate_on() {
-    envelopeState = ENVELOPE_STATE_ATTACK;
+    changeState(ENVELOPE_STATE_ATTACK);
   }
   void gate_off() {
-    envelopeState = ENVELOPE_STATE_RELEASE;
+    changeState(ENVELOPE_STATE_RELEASE);
   }
-  void setCallback(Callback c) {
-    callback = c;
+  void registerSetterCallback(SetterCallback c) {
+    setterCallback = c;
   }
+  void registerStateChangeCallback(StateChangeCallback c) {
+    stateChangeCallback = c;
+  }
+  
   void setInverted(bool in_inverted = true) {
     inverted = in_inverted;
   }
+
+  void setParamValueA(float paramValue) {
+    Serial.print("Setting paramvalue to ");
+    Serial.println(paramValue);
+    paramValueA = paramValue;
+  }
+
+  void changeState(int new_state) {
+    if (stateChangeCallback && envelopeState != new_state) {
+      stateChangeCallback(envelopeState, envelopeState);
+    }
+    envelopeState = new_state;
+  }
   
-  void setEnvelope(float envelopeLevel)
+  void setEnvelope(float envelopeLevel, bool force = false)
   {
     // unipolar
     //cvValues[ CV_CHANNEL_ENVELOPE ] = envelopeLevel;
-    if (inverted)
+    if (envelopeLevel>envelopeStopLevel && inverted)
       envelopeLevel = 1.0-envelopeLevel;
-    callback(envelopeLevel);
+      
+    if (envelopeState==ENVELOPE_STATE_IDLE)
+      envelopeLevel = 0.0;
+
+    setterCallback(envelopeLevel, force);
   }
   
-  void updateEnvelope(int envelopeControl)
+  void updateEnvelope() //int envelopeControl)
   {
       //int envelopeControl = analogRead( PIN_ENVELOPE );
   
-      float x = constrain( 8.0f * (float)(envelopeControl-10) / 1003.1f, 0.0f, 7.999f );
+      //float x = constrain( 8.0f * (float)(envelopeControl-10) / 1003.1f, 0.0f, 7.999f );
+      float x = constrain( 8.0f * paramValueA, 0.0f, 7.999f );
       EnvA = int(x);
       EnvB = EnvA+1;
       EnvAlpha = constrain( x - EnvA, 0.0f, 1.0f );
@@ -178,7 +211,7 @@ public:
               if (envelopeLevel >= 1.0f)
               {
                   envelopeLevel = 1.0f;
-                  envelopeState = ENVELOPE_STATE_DECAY;
+                  changeState(ENVELOPE_STATE_DECAY);
               }
               break;
   
@@ -188,7 +221,7 @@ public:
               sustainLevel = lerp(SustainLevelTable[EnvA],SustainLevelTable[EnvB],EnvAlpha);
               if (envelopeLevel <= sustainLevel)
               {
-                  envelopeState = ENVELOPE_STATE_SUSTAIN;
+                  changeState(ENVELOPE_STATE_SUSTAIN);
               }
               break;
   
@@ -197,7 +230,7 @@ public:
               envelopeLevel *= damp;
               if (envelopeLevel <= envelopeStopLevel)
               {
-                  envelopeState = ENVELOPE_STATE_IDLE;
+                  changeState(ENVELOPE_STATE_IDLE);
               }
               break;
   
@@ -206,7 +239,7 @@ public:
               envelopeLevel *= damp;
               if (envelopeLevel <= envelopeStopLevel)
               {
-                  envelopeState = ENVELOPE_STATE_IDLE;
+                  changeState(ENVELOPE_STATE_IDLE);
               }
               break;           
           }

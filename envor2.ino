@@ -1,0 +1,113 @@
+#include "MCP_DAC.h"
+
+#define IN_GATE_A   A0
+//#define IN_ATTACK   A3
+//#define IN_DECAY    A4
+#define IN_KNOB_A  A1
+#define IN_KNOB_B  A2
+
+unsigned long last_ticked = 0;
+
+#define TIME_DIVIDER 2  // larger = slower envelopes
+
+long bpm_clock () {
+  return micros() / TIME_DIVIDER; //millis();
+}
+
+#include "weirdolope_oo_class.hpp"
+#include "GateInput.hpp"
+#include "ParameterInput.hpp"
+#include "MCP.h"
+
+#define NUM_ENVELOPES      2
+#define NUM_GATE_INPUTS    1
+#define NUM_PARAM_INPUTS   1
+
+Envelope        *envelopes[NUM_ENVELOPES];
+GateInput       *gate_inputs[NUM_GATE_INPUTS];
+ParameterInput  *param_inputs[NUM_PARAM_INPUTS];
+
+void setup() {
+  // put your setup code here, to run once:
+
+  Serial.begin(115200);
+  Serial.println(__FILE__);
+
+  for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+    envelopes[i] = new Envelope();
+  }
+
+  envelopes[0]->registerSetterCallback(&callback_a);
+  /*envelopes[0]->registerStateChangeCallback([](int old_stage, int new_stage) {
+    Serial.print("State changed from ");
+    Serial.print(old_stage);
+    Serial.print(" to ");
+    Serial.println(new_stage);
+    
+    if (new_stage==Envelope::ENVELOPE_STATE_RELEASE) {
+      Serial.println("trigger envelope 1");
+      envelopes[1]->gate_on();
+    } else if (new_stage==Envelope::ENVELOPE_STATE_ATTACK) {
+      Serial.println("trigger envelope 1 OFF");
+      envelopes[1]->gate_off();
+    }
+  });*/
+
+  envelopes[1]->registerSetterCallback(&callback_b);
+  envelopes[1]->setInverted(true);
+
+  for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+    envelopes[i]->begin();
+  }
+
+  //gate_inputs[0] = new AnalogGateInput(IN_GATE_A, &envelopes[0]->gate_on, &envelopes[0]->gate_off);
+  gate_inputs[0] = new AnalogGateInput(IN_GATE_A, envelopes[0]); //, &envelopes[0]->gate_off);
+  
+  param_inputs[0] = new AnalogParameterInput(IN_KNOB_A, [](float normal) {
+    envelopes[0]->setParamValueA(normal);
+  });
+
+  setup_mcp();
+
+  Serial.println("\nDone...");
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
+    param_inputs[i]->loop();
+  }
+
+  for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
+    gate_inputs[i]->loop();
+  }
+
+  /*static int knob_a;
+  static int knob_b;
+  int new_knob_a = analogRead(IN_RELEASE);
+  int new_knob_b = analogRead(IN_SUSTAIN);
+  if (abs(new_knob_a - knob_a)>2) {
+    Serial.print("Changed knob_a from ");
+    Serial.print(knob_a);
+    Serial.print("\tto ");
+    Serial.print(new_knob_a);
+    Serial.println();
+    knob_a = new_knob_a;
+  }
+  if (abs(new_knob_b - knob_b)>2) {
+    Serial.print("Changed knob_b from ");
+    Serial.print(knob_b);
+    Serial.print("\tto ");
+    Serial.print(new_knob_b);
+    Serial.println();
+    knob_b = new_knob_b;
+  }*/
+
+  for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+    envelopes[i]->updateEnvelope(); //knob_a);
+    envelopes[1]->updateEnvelope(); //knob_b);
+  }
+  
+}
