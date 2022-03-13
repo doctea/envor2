@@ -22,7 +22,8 @@
 // and pianos that I could measure some 
 // representative envelope time curves from. 
 
-
+// Now modified quite a bit by Tristan Rowley with full thanks and royalties ;-) to Russell Borogove for the basis!
+//  Seems to work OK on an Arduino Nano
 
 class Envelope {
   // attack rate, amplitude change per millisec
