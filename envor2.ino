@@ -8,10 +8,10 @@
 
 unsigned long last_ticked = 0;
 
-#define TIME_DIVIDER 2  // larger = slower envelopes
+#define TIME_MULT 5  // larger = faster envelopes
 
 long bpm_clock () {
-  return micros() / TIME_DIVIDER; //millis();
+  return micros() * TIME_MULT; //millis();
 }
 
 #include "weirdolope_oo_class.hpp"
@@ -21,7 +21,7 @@ long bpm_clock () {
 
 #define NUM_ENVELOPES      2
 #define NUM_GATE_INPUTS    1
-#define NUM_PARAM_INPUTS   1
+#define NUM_PARAM_INPUTS   2
 
 Envelope        *envelopes[NUM_ENVELOPES];
 GateInput       *gate_inputs[NUM_GATE_INPUTS];
@@ -33,41 +33,58 @@ void setup() {
   Serial.begin(115200);
   Serial.println(__FILE__);
 
+  // start the MCP hardware output -- need to do this before envelopes are started!
+  setup_mcp();
+
+  // set up envelopes
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     envelopes[i] = new Envelope();
   }
 
+  // for envelope 0, use mcp callback_a, trigger envelope 1 when reaching RELEASE stage, turn off envelope 1 when reach SUSTAIN mode
   envelopes[0]->registerSetterCallback(&callback_a);
-  /*envelopes[0]->registerStateChangeCallback([](int old_stage, int new_stage) {
-    Serial.print("State changed from ");
-    Serial.print(old_stage);
-    Serial.print(" to ");
-    Serial.println(new_stage);
+  envelopes[0]->registerStateChangeCallback([](int old_stage, int new_stage) {
+    //Serial.print("State changed from ");
+    //Serial.print(old_stage);
+    //Serial.print(" to ");
+    //Serial.println(new_stage);
     
     if (new_stage==Envelope::ENVELOPE_STATE_RELEASE) {
-      Serial.println("trigger envelope 1");
+      //Serial.println("trigger envelope 1");
       envelopes[1]->gate_on();
-    } else if (new_stage==Envelope::ENVELOPE_STATE_ATTACK) {
-      Serial.println("trigger envelope 1 OFF");
-      envelopes[1]->gate_off();
-    }
-  });*/
+    } else if (new_stage==Envelope::ENVELOPE_STATE_SUSTAIN || new_stage==Envelope::ENVELOPE_STATE_IDLE) {
+      //Serial.println("trigger envelope 1 OFF");
+      //envelopes[1]->gate_off();
+      envelopes[1]->stop();
+    } 
+  });
 
+  // for envelope 1, use mcp callback_b, and invert output
   envelopes[1]->registerSetterCallback(&callback_b);
   envelopes[1]->setInverted(true);
+  envelopes[1]->setIdleSlew(1000.0*1000.0);
 
+  //////// start the envelopes (ie send initial value)
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     envelopes[i]->begin();
   }
 
-  //gate_inputs[0] = new AnalogGateInput(IN_GATE_A, &envelopes[0]->gate_on, &envelopes[0]->gate_off);
-  gate_inputs[0] = new AnalogGateInput(IN_GATE_A, envelopes[0]); //, &envelopes[0]->gate_off);
-  
-  param_inputs[0] = new AnalogParameterInput(IN_KNOB_A, [](float normal) {
+  /////// set up gate inputs
+  //gate_inputs[0] = new AnalogGateInput(IN_GATE_A, &envelopes[0]->gate_on, &envelopes[0]->gate_off); // alternate callback method using functions
+  // analog input on pin IN_GATE_A sends gate_on / gate_off to envelope 0
+  gate_inputs[0] = new AnalogGateInput(IN_GATE_A, envelopes[0]);
+
+  //////// set up parameter controls
+  // for envelope 0, set ParamValueA when analogue input on pin IN_KNOB_B changes
+  param_inputs[0] = new AnalogParameterInput(IN_KNOB_B, [](float normal) {
     envelopes[0]->setParamValueA(normal);
   });
+  
+  // for envelope 1, set ParamValueA when analogue input on pin IN_KNOB_A changes
+  param_inputs[1] = new AnalogParameterInput(IN_KNOB_A, [](float normal) {
+    envelopes[1]->setParamValueA(normal);
+  });
 
-  setup_mcp();
 
   Serial.println("\nDone...");
 

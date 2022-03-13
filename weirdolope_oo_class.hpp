@@ -23,6 +23,7 @@
 // representative envelope time curves from. 
 
 
+
 class Envelope {
   // attack rate, amplitude change per millisec
   using SetterCallback = void (*)(float,bool);
@@ -120,12 +121,17 @@ private:
   StateChangeCallback stateChangeCallback;
 
   bool inverted = false;
+  float idleSlew = false;
+
+  unsigned long stageStartedAt;
+  float stageStartLevel = 0.0f;
 
 public:
 
   static const int ENVELOPE_STATE_IDLE = 0;
-  static const int ENVELOPE_STATE_ATTACK = 1;
-  static const int ENVELOPE_STATE_DECAY = 2;
+  //static const int ENVELOPE_STATE_SLEW_TO_STOP = 1;
+  static const int ENVELOPE_STATE_ATTACK =  1;
+  static const int ENVELOPE_STATE_DECAY =   2;
   static const int ENVELOPE_STATE_SUSTAIN = 3;
   static const int ENVELOPE_STATE_RELEASE = 4;
 
@@ -134,6 +140,7 @@ public:
   void begin() {
     Serial.println("Envelope.begin()");
     setEnvelope(0.0f);
+    Serial.println("Finished Envelope.begin()");
   }
 
   void gate_on() {
@@ -142,6 +149,12 @@ public:
   void gate_off() {
     changeState(ENVELOPE_STATE_RELEASE);
   }
+  void stop() {
+    changeState(ENVELOPE_STATE_IDLE);
+  }
+  /*void slew_to_stop() {
+    changeState(ENVELOPE_STATE_SLEW_TO_STOP);
+  }*/
   void registerSetterCallback(SetterCallback c) {
     setterCallback = c;
   }
@@ -152,6 +165,11 @@ public:
   void setInverted(bool in_inverted = true) {
     inverted = in_inverted;
   }
+  void setIdleSlew(float in_slew = true) {
+    Serial.print("Setting idleSlew to ");
+    Serial.println(in_slew);
+    idleSlew = in_slew;
+  }
 
   void setParamValueA(float paramValue) {
     Serial.print("Setting paramvalue to ");
@@ -160,8 +178,11 @@ public:
   }
 
   void changeState(int new_state) {
-    if (stateChangeCallback && envelopeState != new_state) {
-      stateChangeCallback(envelopeState, envelopeState);
+    if (envelopeState != new_state) {
+      stageStartedAt = bpm_clock();
+      stageStartLevel = envelopeLevel;
+      if (stateChangeCallback)
+        stateChangeCallback(envelopeState, new_state);
     }
     envelopeState = new_state;
   }
@@ -170,13 +191,18 @@ public:
   {
     // unipolar
     //cvValues[ CV_CHANNEL_ENVELOPE ] = envelopeLevel;
+    //Serial.print("setEnvelope passed ");
+    //Serial.println(envelopeLevel);
+    
     if (envelopeLevel>envelopeStopLevel && inverted)
       envelopeLevel = 1.0-envelopeLevel;
       
     if (envelopeState==ENVELOPE_STATE_IDLE)
       envelopeLevel = 0.0;
 
-    setterCallback(envelopeLevel, force);
+    if (setterCallback!=NULL)
+      setterCallback(envelopeLevel, force);
+    //else Serial.println("setterCallback is NULL?!");
   }
   
   void updateEnvelope() //int envelopeControl)
@@ -201,8 +227,29 @@ public:
   
           switch (envelopeState)
           {
-          case ENVELOPE_STATE_IDLE:       
-              envelopeLevel = 0.0f;
+          case ENVELOPE_STATE_IDLE:
+              if (envelopeLevel>envelopeStopLevel && idleSlew>0.01) {
+                Serial.print("stageStartLevel is ");
+                Serial.print(stageStartLevel);
+                Serial.print(F(", with idleSlew at "));
+                Serial.print(idleSlew);
+                Serial.print(F(" @ time elapsed "));
+                Serial.print(bpm_clock()-stageStartedAt);
+                Serial.print(" after some maths = ");
+                Serial.print(constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0, 1.0));
+                envelopeLevel = lerp(
+                  //inverted ? 1.0-stageStartLevel : stageStartLevel, 
+                  stageStartLevel,
+                  0.0f, 
+                  constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0, 1.0)
+                );
+                //if (inverted) envelopeLevel = 1.0 - envelopeLevel;
+                Serial.print(F(" gives level "));
+                Serial.println(envelopeLevel);
+
+              } else {
+                envelopeLevel = 0.0f;
+              }
               break;
           
           case ENVELOPE_STATE_ATTACK:    
