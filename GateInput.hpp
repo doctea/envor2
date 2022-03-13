@@ -18,7 +18,7 @@ class GateInput {
     unsigned long debounceDelay = 5;    // the debounce time; increase if the output flickers   
 
   public:
-    GateInput(int in_inputPin, Envelope *in_target) { //Callback in_gate_on_callback, Callback in_gate_off_callback) {
+    GateInput(int in_inputPin, Envelope *in_target) {
       inputPin = in_inputPin;
       pinMode(inputPin, INPUT);
 
@@ -74,11 +74,7 @@ class GateInput {
     
       if (changed) {
         if (triggered) {
-          Serial.println("==== Gate start");
-          //update_envelope(0, 127, true);
-          //update_envelope(1, 127, false);
-          //envelopes[0]->gate_on();
-          //gate_on_callback();
+          //Serial.println("==== Gate start");
           if (gate_on_callback != NULL) {
             gate_on_callback();
           }
@@ -87,18 +83,13 @@ class GateInput {
           }
           //envelopes[1]->gate_on();
         } else {
-          Serial.println("==== Gate stop");
-          //update_envelope(0, 0, false);
-          //envelopes[0]->gate_off();
-          //gate_off_callback();
+          //Serial.println("==== Gate stop");
           if (gate_off_callback != NULL) {
             gate_off_callback();
           }
           if (target != NULL) {
             target->gate_off();
           }
-          //envelopes[1]->gate_off();
-          //update_envelope(1, 0, false);
         }
       }
     }

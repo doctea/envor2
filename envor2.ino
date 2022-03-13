@@ -52,17 +52,20 @@ void setup() {
     if (new_stage==Envelope::ENVELOPE_STATE_RELEASE) {
       //Serial.println("trigger envelope 1");
       envelopes[1]->gate_on();
-    } else if (new_stage==Envelope::ENVELOPE_STATE_SUSTAIN || new_stage==Envelope::ENVELOPE_STATE_IDLE) {
+    } else if (new_stage==Envelope::ENVELOPE_STATE_SUSTAIN) {
       //Serial.println("trigger envelope 1 OFF");
       //envelopes[1]->gate_off();
       envelopes[1]->stop();
-    } 
+    } else if (new_stage==Envelope::ENVELOPE_STATE_IDLE) {
+      envelopes[1]->invert_release(); //|| new_stage==Envelope::ENVELOPE_STATE_IDLE
+    }
   });
 
   // for envelope 1, use mcp callback_b, and invert output
   envelopes[1]->registerSetterCallback(&callback_b);
   envelopes[1]->setInverted(true);
-  envelopes[1]->setIdleSlew(1000.0*1000.0);
+  //envelopes[1]->setIdleSlew(1000.0*1000.0);
+  envelopes[1]->setSlewRate(1.0005f); //setIdleSlew(1000.0*1000.0);
 
   //////// start the envelopes (ie send initial value)
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
@@ -92,6 +95,19 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  if (Serial.available() > 0) {
+    // read the incoming byte:
+    int incomingByte = Serial.read();
+    if (incomingByte=='R') {
+      Serial.println("Resetting!");
+      MCP.shutDown();
+      MCP.reset();
+      setup_mcp();
+      envelopes[0]->begin();
+      envelopes[1]->begin();
+    }
+  }
 
   for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
     param_inputs[i]->loop();

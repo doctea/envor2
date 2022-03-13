@@ -121,7 +121,8 @@ private:
   StateChangeCallback stateChangeCallback;
 
   bool inverted = false;
-  float idleSlew = false;
+  //float idleSlew = false;
+  float slewRate = 0.0f;
 
   unsigned long stageStartedAt;
   float stageStartLevel = 0.0f;
@@ -134,10 +135,13 @@ public:
   static const int ENVELOPE_STATE_DECAY =   2;
   static const int ENVELOPE_STATE_SUSTAIN = 3;
   static const int ENVELOPE_STATE_RELEASE = 4;
+  static const int ENVELOPE_STATE_INVERTED_RELEASE = 5;
 
   int envelopeState = ENVELOPE_STATE_IDLE;
 
   void begin() {
+    envelopeLevel = 0.0f;
+    envelopeState = ENVELOPE_STATE_IDLE;
     Serial.println("Envelope.begin()");
     setEnvelope(0.0f);
     Serial.println("Finished Envelope.begin()");
@@ -152,6 +156,9 @@ public:
   void stop() {
     changeState(ENVELOPE_STATE_IDLE);
   }
+  void invert_release() {
+    changeState(ENVELOPE_STATE_INVERTED_RELEASE);
+  }
   /*void slew_to_stop() {
     changeState(ENVELOPE_STATE_SLEW_TO_STOP);
   }*/
@@ -165,10 +172,13 @@ public:
   void setInverted(bool in_inverted = true) {
     inverted = in_inverted;
   }
-  void setIdleSlew(float in_slew = true) {
+  /*void setIdleSlew(float in_slew = true) {
     Serial.print("Setting idleSlew to ");
     Serial.println(in_slew);
     idleSlew = in_slew;
+  }*/
+  void setSlewRate(float in_slew = true) {
+    slewRate = in_slew;
   }
 
   void setParamValueA(float paramValue) {
@@ -197,8 +207,8 @@ public:
     if (envelopeLevel>envelopeStopLevel && inverted)
       envelopeLevel = 1.0-envelopeLevel;
       
-    if (envelopeState==ENVELOPE_STATE_IDLE)
-      envelopeLevel = 0.0;
+    //if (envelopeState==ENVELOPE_STATE_IDLE)
+    //  envelopeLevel = 0.0;
 
     if (setterCallback!=NULL)
       setterCallback(envelopeLevel, force);
@@ -228,7 +238,7 @@ public:
           switch (envelopeState)
           {
           case ENVELOPE_STATE_IDLE:
-              if (envelopeLevel>envelopeStopLevel && idleSlew>0.01) {
+              /*if (envelopeLevel>envelopeStopLevel && idleSlew>0.01) {
                 Serial.print("stageStartLevel is ");
                 Serial.print(stageStartLevel);
                 Serial.print(F(", with idleSlew at "));
@@ -236,20 +246,20 @@ public:
                 Serial.print(F(" @ time elapsed "));
                 Serial.print(bpm_clock()-stageStartedAt);
                 Serial.print(" after some maths = ");
-                Serial.print(constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0, 1.0));
+                Serial.print(constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0f, 1.0f));
                 envelopeLevel = lerp(
-                  //inverted ? 1.0-stageStartLevel : stageStartLevel, 
+                  //inverted ? 1.0f-stageStartLevel : stageStartLevel, 
                   stageStartLevel,
                   0.0f, 
-                  constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0, 1.0)
+                  constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0f, 1.0f)
                 );
-                //if (inverted) envelopeLevel = 1.0 - envelopeLevel;
+                if (inverted) envelopeLevel = 1.0 - envelopeLevel;
                 Serial.print(F(" gives level "));
                 Serial.println(envelopeLevel);
 
-              } else {
+              } else {*/
                 envelopeLevel = 0.0f;
-              }
+              //}
               break;
           
           case ENVELOPE_STATE_ATTACK:    
@@ -289,6 +299,18 @@ public:
                   changeState(ENVELOPE_STATE_IDLE);
               }
               break;           
+
+          case ENVELOPE_STATE_INVERTED_RELEASE:
+              //damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
+              //envelopeLevel *= damp;
+              envelopeLevel = constrain(envelopeLevel*slewRate, 0.0f, 1.0f);
+              if (envelopeLevel <= envelopeStopLevel || envelopeLevel>=0.9999f)
+              {
+                  changeState(ENVELOPE_STATE_IDLE);
+              }
+              //if (inverted) envelopeLevel = 1.0f - envelopeLevel;
+              break;      
+              
           }
           //Serial.print("envelopeLevel = ");
           //Serial.println(envelopeLevel);
