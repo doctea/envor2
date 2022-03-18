@@ -104,6 +104,8 @@ private:
   int EnvA = 0;
   int EnvB = 1;
   float EnvAlpha = 0.0f;
+
+  long long lastUpdatedClock;
     
   float envelopeLevel = 0.0f;
   // silence the envelope when it reaches this level, well below 12 bit dac resolution.
@@ -146,6 +148,11 @@ public:
     Serial.println("Envelope.begin()");
     setEnvelope(0.0f);
     Serial.println("Finished Envelope.begin()");
+  }
+
+  bool debug = false;
+  void setDebug() {
+    debug = !debug;
   }
 
   void gate_on() {
@@ -213,7 +220,7 @@ public:
 
     if (setterCallback!=NULL)
       setterCallback(envelopeLevel, force);
-    //else Serial.println("setterCallback is NULL?!");
+    else if (debug) Serial.println("setterCallback is NULL?!");
   }
   
   void updateEnvelope() //int envelopeControl)
@@ -226,44 +233,48 @@ public:
       EnvB = EnvA+1;
       EnvAlpha = constrain( x - EnvA, 0.0f, 1.0f );
   
-      long ttg = nextEnvelopeUpdate - bpm_clock(); //micros();
+      long ttg = bpm_clock() - lastUpdatedClock; //micros();
   
       float delta = 0.0f;
       float damp = 1.0f;
       float sustainLevel = 0.7f;
-      if (ttg < 0)
-      {
+      if (ttg > TIME_BETWEEN_UPDATES) {
           //nextEnvelopeUpdate += 1000;
           nextEnvelopeUpdate += 1000; //1000;
   
           switch (envelopeState)
           {
           case ENVELOPE_STATE_IDLE:
-              /*if (envelopeLevel>envelopeStopLevel && idleSlew>0.01) {
-                Serial.print("stageStartLevel is ");
-                Serial.print(stageStartLevel);
-                Serial.print(F(", with idleSlew at "));
-                Serial.print(idleSlew);
-                Serial.print(F(" @ time elapsed "));
-                Serial.print(bpm_clock()-stageStartedAt);
-                Serial.print(" after some maths = ");
-                Serial.print(constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0f, 1.0f));
+              if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
+                if (debug) {
+                  Serial.print("stageStartLevel is ");
+                  Serial.print(stageStartLevel);
+                  Serial.print(F(", with slewRate at "));
+                  Serial.print(slewRate);
+                  Serial.print(F(" @ time elapsed "));
+                  Serial.print((unsigned long)(bpm_clock()-stageStartedAt));
+                  Serial.print(" after some maths = ");
+                  Serial.print(constrain((bpm_clock()-stageStartedAt)/slewRate, 0.0f, 1.0f));
+                }
+                
                 envelopeLevel = lerp(
                   //inverted ? 1.0f-stageStartLevel : stageStartLevel, 
                   stageStartLevel,
                   0.0f, 
-                  constrain((bpm_clock()-stageStartedAt)/idleSlew, 0.0f, 1.0f)
+                  constrain((bpm_clock()-stageStartedAt)/slewRate, 0.0f, 1.0f)
                 );
                 if (inverted) envelopeLevel = 1.0 - envelopeLevel;
                 Serial.print(F(" gives level "));
                 Serial.println(envelopeLevel);
 
-              } else {*/
+              } else {
+                if(debug) Serial.println("ENVELOPE_STATE_IDLE");
                 envelopeLevel = 0.0f;
-              //}
+              }
               break;
           
           case ENVELOPE_STATE_ATTACK:    
+              if(debug) Serial.println("ENVELOPE_STATE_ATTACK");
               delta = lerp( AttackRateTable[EnvA], AttackRateTable[EnvB], EnvAlpha );
               envelopeLevel += delta;
               if (envelopeLevel >= 1.0f)
@@ -274,6 +285,7 @@ public:
               break;
   
           case ENVELOPE_STATE_DECAY:
+              if(debug) Serial.println("ENVELOPE_STATE_DECAY");
               damp = lerp( DecayRateTable[EnvA], DecayRateTable[EnvB], EnvAlpha );
               envelopeLevel *= damp;
               sustainLevel = lerp(SustainLevelTable[EnvA],SustainLevelTable[EnvB],EnvAlpha);
@@ -284,6 +296,7 @@ public:
               break;
   
           case ENVELOPE_STATE_SUSTAIN:
+              if(debug) Serial.println("ENVELOPE_STATE_SUSTAIN");
               damp = lerp( SustainRateTable[EnvA], SustainRateTable[EnvB], EnvAlpha );
               envelopeLevel *= damp;
               if (envelopeLevel <= envelopeStopLevel)
@@ -293,6 +306,7 @@ public:
               break;
   
           case ENVELOPE_STATE_RELEASE:
+              if(debug) Serial.println("ENVELOPE_STATE_RELEASE");
               damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
               envelopeLevel *= damp;
               if (envelopeLevel <= envelopeStopLevel)
@@ -301,7 +315,8 @@ public:
               }
               break;           
 
-          case ENVELOPE_STATE_INVERTED_RELEASE:
+          /*case ENVELOPE_STATE_INVERTED_RELEASE:
+              if(debug) Serial.println("ENVELOPE_STATE_INVERTED_RELEASE");
               //damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
               //envelopeLevel *= damp;
               envelopeLevel = constrain(envelopeLevel*slewRate, 0.0f, 1.0f);
@@ -310,13 +325,25 @@ public:
                   changeState(ENVELOPE_STATE_IDLE);
               }
               //if (inverted) envelopeLevel = 1.0f - envelopeLevel;
-              break;      
+              break;      */
               
+          default:
+              if(debug) Serial.println("UNKNOWN ENVELOPE STATE?");
+              break;
           }
           //Serial.print("envelopeLevel = ");
           //Serial.println(envelopeLevel);
+
+          lastUpdatedClock = bpm_clock();
   
           setEnvelope(envelopeLevel);
+      } else if (debug) {
+        Serial.print("ttg >0 (is ");
+        Serial.print(ttg);
+        Serial.print(") and bpm_clock is ");
+        Serial.print((unsigned long)bpm_clock());
+        Serial.print(" and nextEnvelopeUpdate is");
+        Serial.println(nextEnvelopeUpdate);
       }
   }
 };

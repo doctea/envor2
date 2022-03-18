@@ -9,8 +9,9 @@
 unsigned long last_ticked = 0;
 
 #define TIME_MULT 5  // larger = faster envelopes
+#define TIME_BETWEEN_UPDATES  500
 
-long bpm_clock () {
+unsigned long long bpm_clock () {
   return micros() * TIME_MULT; //millis();
 }
 
@@ -65,7 +66,7 @@ void setup() {
   envelopes[1]->registerSetterCallback(&callback_b);
   envelopes[1]->setInverted(true);
   //envelopes[1]->setIdleSlew(1000.0*1000.0);
-  envelopes[1]->setSlewRate(1.0005f); //setIdleSlew(1000.0*1000.0);
+  envelopes[1]->setSlewRate(1000000.0005f); //setIdleSlew(1000.0*1000.0);
 
   //////// start the envelopes (ie send initial value)
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
@@ -104,8 +105,20 @@ void loop() {
       MCP.shutDown();
       MCP.reset();
       setup_mcp();
+
+      for (int a = 0 ; a < MCP.maxValue() ; a++) {
+        callback_a(random(0,MCP.maxValue()-a), true);
+        callback_b(random(0,a), true);
+      }
+      
       envelopes[0]->begin();
       envelopes[1]->begin();
+    } else if (incomingByte=='A') {
+      Serial.println("enabling debug on A");
+      envelopes[0]->setDebug();
+    } else if (incomingByte=='B') {
+      Serial.println("enabling debug on B");
+      envelopes[1]->setDebug();
     }
   }
 

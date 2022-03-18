@@ -73,12 +73,15 @@ class GateInput {
       }
     
       if (changed) {
+        //Serial.println("GateInput changed!");
         if (triggered) {
           //Serial.println("==== Gate start");
           if (gate_on_callback != NULL) {
             gate_on_callback();
           }
           if (target != NULL) {
+            //Serial.print("calling gate_on against ");
+            //Serial.println((uint32_t) &target);
             target->gate_on();
           }
           //envelopes[1]->gate_on();
