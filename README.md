@@ -13,6 +13,11 @@ with many thanks to Discord "synthesizers, yo" user Borogove for the help debugg
 - envelope 1 triggers when envelope 0 reaches Release stage
 - envelope 1 and 3 biased + inverted to use as inverted envelopes
 - slewing of envelope 1 back to level 0 when envelope 0 finishes
+- some debugging over serial monitor:-
+  - A/B/C/D turns on debugging for envelope if exists
+  - M/N/O/P turns on debugging for gates if exists
+  - W/X/Y/Z turns on debugging for paramis if exists
+  - R spams a reset and random envelope values (used for testing if the hardware is working)
 
 ## Future/todo
 
