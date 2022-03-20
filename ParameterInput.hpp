@@ -1,5 +1,9 @@
 class ParameterInput {
   public:
+    int inputPin;
+    Envelope *target = NULL ;
+
+
     virtual void read() {};
     void loop() {
       read();
@@ -7,7 +11,7 @@ class ParameterInput {
 };
 
 class DigitalParameterInput : public ParameterInput  {
-  int inputPin;
+  
   bool lastValue = false;
 
   public:
@@ -18,12 +22,19 @@ class DigitalParameterInput : public ParameterInput  {
       callback = in_callback;
       pinMode(inputPin, INPUT);
     }
+    DigitalParameterInput(int in_inputPin, Envelope *in_target) {
+      inputPin = in_inputPin;
+      target = in_target;
+    }
   
     void read() {
       // todo: debouncing
       bool currentValue = digitalRead(inputPin);
       if (currentValue != lastValue) {
-        callback(currentValue);
+        if (callback != NULL)
+          callback(currentValue);
+        if (target != NULL)
+          target->setParamValueA(currentValue);
         lastValue = currentValue;
         //return currentValue;
       }
@@ -44,6 +55,10 @@ class AnalogParameterInput : public ParameterInput {
       callback = in_callback;
       pinMode(inputPin, INPUT);
     }
+    AnalogParameterInput(int in_inputPin, Envelope *in_target) {
+      inputPin = in_inputPin;
+      target = in_target;
+    }    
 
     void loop () {
       read();
@@ -57,7 +72,10 @@ class AnalogParameterInput : public ParameterInput {
       int currentValue = analogRead(inputPin);
       if (abs(currentValue - lastValue) > sensitivity) {
         lastValue = currentValue;
-        callback(get_normal_value(currentValue));
+        if (callback != NULL)
+          callback(get_normal_value(currentValue));
+        if (target != NULL)
+          target->setParamValueA(get_normal_value(currentValue));
         //return currentValue;
       }
     }
