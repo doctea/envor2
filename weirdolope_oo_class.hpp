@@ -264,8 +264,10 @@ public:
                   constrain((bpm_clock()-stageStartedAt)/slewRate, 0.0f, 1.0f)
                 );
                 if (inverted) envelopeLevel = 1.0 - envelopeLevel;
-                Serial.print(F(" gives level "));
-                Serial.println(envelopeLevel);
+                if (debug) {
+                  Serial.print(F(" gives level "));
+                  Serial.println(envelopeLevel);
+                }
 
               } else {
                 if(debug) Serial.println("ENVELOPE_STATE_IDLE");

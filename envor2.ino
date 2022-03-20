@@ -152,8 +152,7 @@ void loop() {
   }*/
 
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-    envelopes[i]->updateEnvelope(); //knob_a);
-    envelopes[1]->updateEnvelope(); //knob_b);
+    envelopes[i]->updateEnvelope();
   }
   
 }
