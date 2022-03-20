@@ -250,7 +250,7 @@ public:
       EnvAlpha = constrain( x - EnvA, 0.0f, 1.0f );
   
       long ttg = bpm_clock() - lastUpdatedClock; //micros();
-  
+
       float delta = 0.0f;
       float damp = 1.0f;
       float sustainLevel = 0.7f;
@@ -258,10 +258,10 @@ public:
           //nextEnvelopeUpdate += 1000;
           nextEnvelopeUpdate += 1000; //1000;
 
-          switch (envelopeState)
-          {
-          case ENVELOPE_STATE_IDLE:
-              if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
+
+          //switch (envelopeState)
+          if (envelopeState==ENVELOPE_STATE_IDLE) {
+              /*if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
                 if (debug) {
                   Serial.print(name);
                   Serial.print(F(": stageStartLevel is "));
@@ -285,16 +285,14 @@ public:
                   Serial.print(F(" gives level "));
                   Serial.println(envelopeLevel);
                 }
-              } else {
+              } else {*/
                 if(debug) {
                   Serial.print(name);
                   Serial.println(": ENVELOPE_STATE_IDLE");
                 }
                 envelopeLevel = 0.0f;
-              }
-              break;
-          
-          case ENVELOPE_STATE_ATTACK:    
+              //}
+          } else if (envelopeState==ENVELOPE_STATE_ATTACK) {
               if(debug) {
                 Serial.print(name);
                 Serial.println(F(": ENVELOPE_STATE_ATTACK"));
@@ -306,9 +304,7 @@ public:
                   envelopeLevel = 1.0f;
                   changeState(ENVELOPE_STATE_DECAY);
               }
-              break;
-  
-          case ENVELOPE_STATE_DECAY:
+          } else if (envelopeState==ENVELOPE_STATE_DECAY) {
               if(debug) {
                 Serial.print(name);
                 Serial.println(F(": ENVELOPE_STATE_DECAY"));
@@ -320,9 +316,7 @@ public:
               {
                   changeState(ENVELOPE_STATE_SUSTAIN);
               }
-              break;
-  
-          case ENVELOPE_STATE_SUSTAIN:
+          } else if (envelopeState==ENVELOPE_STATE_SUSTAIN) {
               if(debug) {
                 Serial.print(name);
                 Serial.println(F(": ENVELOPE_STATE_SUSTAIN"));
@@ -333,9 +327,7 @@ public:
               {
                   changeState(ENVELOPE_STATE_IDLE);
               }
-              break;
-  
-          case ENVELOPE_STATE_RELEASE:
+          }  else if (envelopeState==ENVELOPE_STATE_RELEASE) {
               if(debug) {
                 Serial.print(name);
                 Serial.println(F(": ENVELOPE_STATE_RELEASE"));
@@ -346,9 +338,7 @@ public:
               {
                   changeState(ENVELOPE_STATE_IDLE);
               }
-              break;           
-
-          /*case ENVELOPE_STATE_INVERTED_RELEASE:
+          } /*else if (envelopeState==ENVELOPE_STATE_INVERTED_RELEASE) { 
               if(debug) Serial.println("ENVELOPE_STATE_INVERTED_RELEASE");
               //damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
               //envelopeLevel *= damp;
@@ -358,29 +348,28 @@ public:
                   changeState(ENVELOPE_STATE_IDLE);
               }
               //if (inverted) envelopeLevel = 1.0f - envelopeLevel;
-              break;      */
-           
-          default:
+          } */ else {
               if(debug) {
                 Serial.print(name);
                 Serial.println(F(": UNKNOWN ENVELOPE STATE?"));
               }
-              break;
           }
           //Serial.print("envelopeLevel = ");
           //Serial.println(envelopeLevel);
 
+
           lastUpdatedClock = bpm_clock();
   
           setEnvelope(envelopeLevel);
+          //return;
       } else if (debug) {
         Serial.print(name);
         Serial.print(F(": ttg >0 (is "));
         Serial.print(ttg);
         Serial.print(F(") and bpm_clock is "));
-        Serial.print((unsigned long)bpm_clock());
-        Serial.print(F(" and nextEnvelopeUpdate is"));
-        Serial.println(nextEnvelopeUpdate);
+        Serial.println((unsigned long)bpm_clock());
+        //Serial.print(F(" and nextEnvelopeUpdate is"));
+        //Serial.println(nextEnvelopeUpdate);
       }
   }
 };
