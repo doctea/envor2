@@ -107,7 +107,7 @@ private:
   int EnvB = 1;
   float EnvAlpha = 0.0f;
 
-  long long lastUpdatedClock;
+  long long lastUpdatedClock = 0l;
     
   float envelopeLevel = 0.0f;
   // silence the envelope when it reaches this level, well below 12 bit dac resolution.
@@ -153,6 +153,7 @@ public:
   void begin() {
     envelopeLevel = 0.0f;
     envelopeState = ENVELOPE_STATE_IDLE;
+    lastUpdatedClock = 0;
     Serial.print(name);
     Serial.println(": Envelope.begin()");
     setEnvelope(0.0f);
