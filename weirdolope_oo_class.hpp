@@ -138,6 +138,8 @@ public:
 
   Envelope() {
     name = NEXT_ENVELOPE_NAME++;
+    Serial.print("Instantiated envelope ");
+    Serial.println(name);
   }
 
   static const int ENVELOPE_STATE_IDLE = 0;
@@ -154,10 +156,10 @@ public:
     envelopeLevel = 0.0f;
     envelopeState = ENVELOPE_STATE_IDLE;
     lastUpdatedClock = 0;
-    Serial.print(name);
-    Serial.println(": Envelope.begin()");
+    //Serial.print(name);
+    //Serial.println(": Envelope.begin()");
     setEnvelope(0.0f);
-    Serial.println("Finished Envelope.begin()");
+    //Serial.println("Finished Envelope.begin()");
   }
 
   bool debug = false;
@@ -201,7 +203,7 @@ public:
 
   void setParamValueA(float paramValue) {
     Serial.print(name);
-    Serial.print(": Setting paramvalue to ");
+    Serial.print(F(": Setting paramvalue to "));
     Serial.println(paramValue);
     paramValueA = paramValue;
   }
@@ -233,7 +235,7 @@ public:
       setterCallback(envelopeLevel, force);
     else if (debug) {
       Serial.print(name);
-      Serial.println(": setterCallback is NULL?!");
+      Serial.println(F(": setterCallback is NULL?!"));
     }
   }
   
@@ -255,20 +257,20 @@ public:
       if (ttg > TIME_BETWEEN_UPDATES) {
           //nextEnvelopeUpdate += 1000;
           nextEnvelopeUpdate += 1000; //1000;
-  
+
           switch (envelopeState)
           {
           case ENVELOPE_STATE_IDLE:
               if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
                 if (debug) {
                   Serial.print(name);
-                  Serial.print(": stageStartLevel is ");
+                  Serial.print(F(": stageStartLevel is "));
                   Serial.print(stageStartLevel);
                   Serial.print(F(", with slewRate at "));
                   Serial.print(slewRate);
                   Serial.print(F(" @ time elapsed "));
                   Serial.print((unsigned long)(bpm_clock()-stageStartedAt));
-                  Serial.print(" after some maths = ");
+                  Serial.print(F(" after some maths = "));
                   Serial.print(constrain((bpm_clock()-stageStartedAt)/slewRate, 0.0f, 1.0f));
                 }
                 
@@ -295,7 +297,7 @@ public:
           case ENVELOPE_STATE_ATTACK:    
               if(debug) {
                 Serial.print(name);
-                Serial.println(": ENVELOPE_STATE_ATTACK");
+                Serial.println(F(": ENVELOPE_STATE_ATTACK"));
               }
               delta = lerp( AttackRateTable[EnvA], AttackRateTable[EnvB], EnvAlpha );
               envelopeLevel += delta;
@@ -309,7 +311,7 @@ public:
           case ENVELOPE_STATE_DECAY:
               if(debug) {
                 Serial.print(name);
-                Serial.println(": ENVELOPE_STATE_DECAY");
+                Serial.println(F(": ENVELOPE_STATE_DECAY"));
               }
               damp = lerp( DecayRateTable[EnvA], DecayRateTable[EnvB], EnvAlpha );
               envelopeLevel *= damp;
@@ -323,7 +325,7 @@ public:
           case ENVELOPE_STATE_SUSTAIN:
               if(debug) {
                 Serial.print(name);
-                Serial.println(": ENVELOPE_STATE_SUSTAIN");
+                Serial.println(F(": ENVELOPE_STATE_SUSTAIN"));
               }
               damp = lerp( SustainRateTable[EnvA], SustainRateTable[EnvB], EnvAlpha );
               envelopeLevel *= damp;
@@ -336,7 +338,7 @@ public:
           case ENVELOPE_STATE_RELEASE:
               if(debug) {
                 Serial.print(name);
-                Serial.println(": ENVELOPE_STATE_RELEASE");
+                Serial.println(F(": ENVELOPE_STATE_RELEASE"));
               }
               damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
               envelopeLevel *= damp;
@@ -357,11 +359,11 @@ public:
               }
               //if (inverted) envelopeLevel = 1.0f - envelopeLevel;
               break;      */
-              
+           
           default:
               if(debug) {
                 Serial.print(name);
-                Serial.println(": UNKNOWN ENVELOPE STATE?");
+                Serial.println(F(": UNKNOWN ENVELOPE STATE?"));
               }
               break;
           }
@@ -373,11 +375,11 @@ public:
           setEnvelope(envelopeLevel);
       } else if (debug) {
         Serial.print(name);
-        Serial.print(": ttg >0 (is ");
+        Serial.print(F(": ttg >0 (is "));
         Serial.print(ttg);
-        Serial.print(") and bpm_clock is ");
+        Serial.print(F(") and bpm_clock is "));
         Serial.print((unsigned long)bpm_clock());
-        Serial.print(" and nextEnvelopeUpdate is");
+        Serial.print(F(" and nextEnvelopeUpdate is"));
         Serial.println(nextEnvelopeUpdate);
       }
   }

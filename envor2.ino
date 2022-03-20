@@ -89,17 +89,19 @@ void setup() {
     envelopes[1]->setParamValueA(normal);
   });
 
-  Serial.println("\nDone...");
+  Serial.println(F("\nDone..."));
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
+  //Serial.println(F("loop()===>"));
+
   if (Serial.available() > 0) {
     // read the incoming byte:
     int incomingByte = Serial.read();
     if (incomingByte=='R') {
-      Serial.println("Resetting!");
+      Serial.println(F("Resetting!"));
       MCP.shutDown();
       MCP.reset();
       setup_mcp();
@@ -115,14 +117,14 @@ void loop() {
       bool found_envelope = false;
       for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
         if (envelopes[i]->name==incomingByte) {
-          Serial.println("toggling debug on ");
+          Serial.println(F("toggling debug on "));
           Serial.println(incomingByte);
           envelopes[i]->setDebug();
           found_envelope = true;
         }
       }
       if (!found_envelope) {
-        Serial.print("Didn't find an enveloped named ");
+        Serial.print(F("Didn't find an enveloped named "));
         Serial.println((char)incomingByte);
       }
     }
@@ -139,5 +141,7 @@ void loop() {
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     envelopes[i]->updateEnvelope();
   }
+
+  //Serial.println(F("<===loop()"));
   
 }
