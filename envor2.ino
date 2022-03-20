@@ -89,9 +89,7 @@ void setup() {
     envelopes[1]->setParamValueA(normal);
   });
 
-
   Serial.println("\nDone...");
-
 }
 
 void loop() {
@@ -113,12 +111,20 @@ void loop() {
       
       envelopes[0]->begin();
       envelopes[1]->begin();
-    } else if (incomingByte=='A') {
-      Serial.println("enabling debug on A");
-      envelopes[0]->setDebug();
-    } else if (incomingByte=='B') {
-      Serial.println("enabling debug on B");
-      envelopes[1]->setDebug();
+    } else if (incomingByte=='A' || incomingByte=='B' || incomingByte=='C' || incomingByte=='D') {
+      bool found_envelope = false;
+      for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+        if (envelopes[i]->name==incomingByte) {
+          Serial.println("toggling debug on ");
+          Serial.println(incomingByte);
+          envelopes[i]->setDebug();
+          found_envelope = true;
+        }
+      }
+      if (!found_envelope) {
+        Serial.print("Didn't find an enveloped named ");
+        Serial.println((char)incomingByte);
+      }
     }
   }
 
@@ -129,27 +135,6 @@ void loop() {
   for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
     gate_inputs[i]->loop();
   }
-
-  /*static int knob_a;
-  static int knob_b;
-  int new_knob_a = analogRead(IN_RELEASE);
-  int new_knob_b = analogRead(IN_SUSTAIN);
-  if (abs(new_knob_a - knob_a)>2) {
-    Serial.print("Changed knob_a from ");
-    Serial.print(knob_a);
-    Serial.print("\tto ");
-    Serial.print(new_knob_a);
-    Serial.println();
-    knob_a = new_knob_a;
-  }
-  if (abs(new_knob_b - knob_b)>2) {
-    Serial.print("Changed knob_b from ");
-    Serial.print(knob_b);
-    Serial.print("\tto ");
-    Serial.print(new_knob_b);
-    Serial.println();
-    knob_b = new_knob_b;
-  }*/
 
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     envelopes[i]->updateEnvelope();
