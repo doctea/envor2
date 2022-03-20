@@ -1,9 +1,10 @@
 #define NUM_ENVELOPES      4
 #define NUM_GATE_INPUTS    1
-#define NUM_PARAM_INPUTS   4
+#define NUM_PARAM_INPUTS   5
 
 void multi_trigger_on();
 void multi_trigger_off();
+void setFifthParameterValue(float normal);
 
 Envelope        envelopes[NUM_ENVELOPES] = {
   Envelope(), 
@@ -23,6 +24,7 @@ AnalogParameterInput  param_inputs[NUM_PARAM_INPUTS] = {
   AnalogParameterInput(IN_KNOB_A, envelopes[1]),
   AnalogParameterInput(IN_KNOB_C, envelopes[2]),
   AnalogParameterInput(IN_KNOB_D, envelopes[3]),
+  AnalogParameterInput(IN_KNOB_E, &setFifthParameterValue),
 };
 
 
@@ -38,6 +40,10 @@ void multi_trigger_off() {
   envelopes[3].gate_off();
 }
 
+void setFifthParameterValue(float normal) {
+  Serial.print("The F#fth Meat: ");
+  Serial.println(normal);
+}
 
 void setup_envelopes() {
   
@@ -105,7 +111,8 @@ void setup_gates() {
 
 void setup_parameters() {
 
-  param_inputs[3].setInverted(true);
+  param_inputs[3].setInverted(true);    // these are wired up back-to-front in my build, so invert them
+  param_inputs[4].setInverted(true);    // these are wired up back-to-front in my build, so invert them
 
   for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
     Serial.print(F("in setup_parameters, got ParameterInput "));

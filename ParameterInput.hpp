@@ -65,18 +65,23 @@ class AnalogParameterInput : public ParameterInput {
     bool inverted = false;
     int sensitivity = 4;
       
-    AnalogParameterInput(int in_inputPin, Callback in_callback, int sensitivity = 2) {
+    AnalogParameterInput(int in_inputPin, Callback in_callback, int in_sensitivity = 3) : ParameterInput() {
       inputPin = in_inputPin;
       callback = in_callback;
+      sensitivity = in_sensitivity;
       pinMode(inputPin, INPUT);
     }
-    AnalogParameterInput(int in_inputPin, Envelope &in_target) : ParameterInput() {
+    AnalogParameterInput(int in_inputPin, Envelope &in_target, int in_sensitivity = 3) : ParameterInput() {
       inputPin = in_inputPin;
       target = &in_target;
+      sensitivity = in_sensitivity;
+      pinMode(inputPin, INPUT);
     }
-    AnalogParameterInput(int in_inputPin, byte in_envelope_number) : ParameterInput() {
+    AnalogParameterInput(int in_inputPin, byte in_envelope_number, int in_sensitivity = 3) : ParameterInput() {
       inputPin = in_inputPin;
       envelope_number = in_envelope_number;
+      sensitivity = in_sensitivity;
+      pinMode(inputPin, INPUT);
     }
 
     void setInverted(bool invert = true) {
