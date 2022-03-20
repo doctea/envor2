@@ -81,17 +81,20 @@ void loop() {
     }
   }
 
-  //for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
-  //   param_inputs[i]->loop();
-  //}
+  for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
+     if (param_inputs[i]!=NULL) 
+       param_inputs[i]->loop();
+  }
   //param_inputs[0]->loop();
 
   for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
-    gate_inputs[i]->loop();
+    if (gate_inputs[i]!=NULL)
+      gate_inputs[i]->loop();
   }
 
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-    envelopes[i]->updateEnvelope();
+    if (envelopes[i]!=NULL)
+      envelopes[i]->updateEnvelope();
   }
 
   //Serial.println(F("<===loop()"));
