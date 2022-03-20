@@ -13,6 +13,8 @@ void setup_mcp() {
 void callback_a (float value, bool force = false) {
   static float last_value;
   if (force || value==0.0 || value!=MCP.lastValue()) {
+    //Serial.print("callback_a passed value ");
+    //Serial.println(value);
     MCP.fastWriteA(value * MCP.maxValue() * 0.9f);
   }
   last_value = value;
@@ -21,6 +23,8 @@ void callback_a (float value, bool force = false) {
 void callback_b (float value, bool force = false) {
   static float last_value;
   if (force || value==0.0 || value!=MCP.lastValue()) {
+    //Serial.print("callback_b passed value ");
+    //Serial.println(value);
     MCP.fastWriteB(value * MCP.maxValue() * 0.9f);
   } 
   last_value = value;
@@ -33,7 +37,6 @@ void callback_c (float value, bool force = false) {
   } 
   last_value = value;
 }
-
 
 void callback_d (float value, bool force = false) {
   static float last_value;

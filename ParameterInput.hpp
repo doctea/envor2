@@ -1,8 +1,19 @@
+char NEXT_PARAMETER_NAME = 'W';
+
 class ParameterInput {
   public:
     int inputPin;
-    Envelope *target = NULL ;
+    Envelope *target;
+    char name;
+    bool debug = false;
 
+    ParameterInput() {
+      name = NEXT_PARAMETER_NAME++;
+    }
+
+    void setDebug() {
+      debug = !debug;
+    }
 
     virtual void read() {};
     void loop() {
@@ -17,14 +28,14 @@ class DigitalParameterInput : public ParameterInput  {
   public:
     using Callback = void (*)(bool);
     Callback callback;
-    DigitalParameterInput(int in_inputPin, Callback in_callback) {
+    DigitalParameterInput(int in_inputPin, Callback in_callback) : ParameterInput() {
       inputPin = in_inputPin;
       callback = in_callback;
       pinMode(inputPin, INPUT);
     }
-    DigitalParameterInput(int in_inputPin, Envelope *in_target) {
+    DigitalParameterInput(int in_inputPin, Envelope &in_target) : ParameterInput() {
       inputPin = in_inputPin;
-      target = in_target;
+      target = &in_target;
     }
   
     void read() {
@@ -33,7 +44,7 @@ class DigitalParameterInput : public ParameterInput  {
       if (currentValue != lastValue) {
         if (callback != NULL)
           callback(currentValue);
-        if (target != NULL)
+        if (target)
           target->setParamValueA(currentValue);
         lastValue = currentValue;
         //return currentValue;
@@ -46,6 +57,7 @@ class AnalogParameterInput : public ParameterInput {
 
   int sensitivity = 2;
   int lastValue = 0;
+  byte envelope_number = 0xff;
   
   public:
     using Callback = void (*)(float);
@@ -55,10 +67,15 @@ class AnalogParameterInput : public ParameterInput {
       callback = in_callback;
       pinMode(inputPin, INPUT);
     }
-    AnalogParameterInput(int in_inputPin, Envelope *in_target) {
+    AnalogParameterInput(int in_inputPin, Envelope &in_target) : ParameterInput() {
       inputPin = in_inputPin;
-      target = in_target;
-    }    
+      target = &in_target;
+    }
+    AnalogParameterInput(int in_inputPin, byte in_envelope_number) : ParameterInput() {
+      inputPin = in_inputPin;
+      envelope_number = in_envelope_number;
+    }
+    
 
     void loop () {
       read();
@@ -72,10 +89,27 @@ class AnalogParameterInput : public ParameterInput {
       int currentValue = analogRead(inputPin);
       if (abs(currentValue - lastValue) > sensitivity) {
         lastValue = currentValue;
-        if (callback != NULL)
-          callback(get_normal_value(currentValue));
-        if (target != NULL)
-          target->setParamValueA(get_normal_value(currentValue));
+        float normal = get_normal_value(currentValue);
+        if (callback != NULL) {
+          if (debug) {
+            Serial.print(name);
+            Serial.print(": calling callback(");
+            Serial.print(normal);
+            Serial.println(")");
+          }      
+          callback(normal);
+        }
+        if (target) {
+          if (debug) {
+            Serial.print(name);
+            Serial.print(": calling target setParamValueA(");
+            Serial.print(normal);
+            Serial.println(")");
+          }
+          target->setParamValueA(normal);
+        }
+        //if (envelope_number!=0xff)
+          //envelopes[envelope_number]->setParamValueA(get_normal_value(currentValue));
         //return currentValue;
       }
     }

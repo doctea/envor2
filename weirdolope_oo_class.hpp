@@ -202,9 +202,11 @@ public:
   }
 
   void setParamValueA(float paramValue) {
-    Serial.print(name);
-    Serial.print(F(": Setting paramvalue to "));
-    Serial.println(paramValue);
+    if (debug) {
+      Serial.print(name);
+      Serial.print(F(": Setting paramvalue to "));
+      Serial.println(paramValue);
+    } 
     paramValueA = paramValue;
   }
 
@@ -231,9 +233,14 @@ public:
     //if (envelopeState==ENVELOPE_STATE_IDLE)
     //  envelopeLevel = 0.0;
 
-    if (setterCallback!=NULL)
+    if (setterCallback!=NULL) {
+      if (debug) {
+        Serial.print(name);
+        Serial.print(F(": calling setterCallback for value "));
+        Serial.println(envelopeLevel);
+      }
       setterCallback(envelopeLevel, force);
-    else if (debug) {
+    } else if (debug) {
       Serial.print(name);
       Serial.println(F(": setterCallback is NULL?!"));
     }
@@ -258,10 +265,9 @@ public:
           //nextEnvelopeUpdate += 1000;
           nextEnvelopeUpdate += 1000; //1000;
 
-
           //switch (envelopeState)
           if (envelopeState==ENVELOPE_STATE_IDLE) {
-              /*if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
+              if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
                 if (debug) {
                   Serial.print(name);
                   Serial.print(F(": stageStartLevel is "));
@@ -285,13 +291,13 @@ public:
                   Serial.print(F(" gives level "));
                   Serial.println(envelopeLevel);
                 }
-              } else {*/
+              } else {
                 if(debug) {
                   Serial.print(name);
                   Serial.println(": ENVELOPE_STATE_IDLE");
                 }
                 envelopeLevel = 0.0f;
-              //}
+              }
           } else if (envelopeState==ENVELOPE_STATE_ATTACK) {
               if(debug) {
                 Serial.print(name);

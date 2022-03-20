@@ -9,7 +9,7 @@
 unsigned long last_ticked = 0;
 
 #define TIME_MULT 5  // larger = faster envelopes
-#define TIME_BETWEEN_UPDATES  500
+#define TIME_BETWEEN_UPDATES  10
 
 unsigned long bpm_clock () {
   return millis() * TIME_MULT; //millis();
@@ -36,9 +36,9 @@ void setup() {
   setup_parameters();
   
   //////// start the envelopes (ie send initial value)
-  for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+  /*for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     envelopes[i]->begin();
-  }
+  }*/
 
   Serial.println(F("\nDone..."));
 }
@@ -62,39 +62,69 @@ void loop() {
         callback_b(random(0,a), true);
       }
       
-      envelopes[0]->begin();
-      envelopes[1]->begin();
+      envelopes[0].begin();
+      envelopes[1].begin();
     } else if (incomingByte=='A' || incomingByte=='B' || incomingByte=='C' || incomingByte=='D') {
-      bool found_envelope = false;
+      bool found = false;
       for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-        if (envelopes[i]->name==incomingByte) {
-          Serial.println(F("toggling debug on "));
-          Serial.println(incomingByte);
-          envelopes[i]->setDebug();
-          found_envelope = true;
+        if (envelopes[i].name==incomingByte) {
+          Serial.print(F("toggling debug on "));
+          Serial.println((char)incomingByte);
+          envelopes[i].setDebug();
+          found = true;
         }
       }
-      if (!found_envelope) {
+      if (!found) {
         Serial.print(F("Didn't find an enveloped named "));
         Serial.println((char)incomingByte);
       }
-    }
+    } else if (incomingByte=='M' || incomingByte=='N' || incomingByte=='O' || incomingByte=='P') {
+      bool found = false;
+      for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
+        if (gate_inputs[i].name==incomingByte) {
+          Serial.print(F("toggling debug on "));
+          Serial.println((char)incomingByte);
+          gate_inputs[i].setDebug();
+          found = true;
+        }
+      }
+      if (!found) {
+        Serial.print(F("Didn't find a gate named "));
+        Serial.println((char)incomingByte);
+      }
+    } else if (incomingByte=='W' || incomingByte=='X' || incomingByte=='Y' || incomingByte=='Z') {
+      bool found = false;
+      for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
+        if (param_inputs[i].name==incomingByte) {
+          Serial.print(F("toggling debug on "));
+          Serial.println((char)incomingByte);
+          param_inputs[i].setDebug();
+          found = true;
+        }
+      }
+      if (!found) {
+        Serial.print(F("Didn't find a paramter named "));
+        Serial.println((char)incomingByte);
+      }
+    } 
   }
 
   for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
-     if (param_inputs[i]!=NULL) 
-       param_inputs[i]->loop();
+     //if (param_inputs[i]) 
+       param_inputs[i].loop();
   }
-  //param_inputs[0]->loop();
 
   for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
-    if (gate_inputs[i]!=NULL)
-      gate_inputs[i]->loop();
+    //if (gate_inputs[i]!=NULL)
+      gate_inputs[i].loop();
   }
 
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-    if (envelopes[i]!=NULL)
-      envelopes[i]->updateEnvelope();
+    //if (envelopes[i]!=NULL) {
+      //Serial.print("loop calling updateEnvelope() against ");
+      //Serial.println((uint32_t) &envelopes[i]);
+      envelopes[i].updateEnvelope();
+    //}
   }
 
   //Serial.println(F("<===loop()"));
