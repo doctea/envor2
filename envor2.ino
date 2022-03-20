@@ -10,8 +10,8 @@
 
 unsigned long last_ticked = 0;
 
-#define TIME_MULT 5  // larger = faster envelopes
-#define TIME_BETWEEN_UPDATES  10
+#define TIME_MULT 50  // larger = faster envelopes
+#define TIME_BETWEEN_UPDATES  5  // ms to wait between updating envelopes
 
 unsigned long bpm_clock () {
   return millis() * TIME_MULT; //millis();
