@@ -5,6 +5,8 @@
 //#define IN_DECAY    A4
 #define IN_KNOB_A  A1
 #define IN_KNOB_B  A2
+#define IN_KNOB_C  A3
+#define IN_KNOB_D  A4
 
 unsigned long last_ticked = 0;
 

@@ -55,13 +55,16 @@ class DigitalParameterInput : public ParameterInput  {
 class AnalogParameterInput : public ParameterInput {
   int inputPin;
 
-  int sensitivity = 2;
   int lastValue = 0;
   byte envelope_number = 0xff;
-  
+
   public:
     using Callback = void (*)(float);
     Callback callback;
+
+    bool inverted = false;
+    int sensitivity = 4;
+      
     AnalogParameterInput(int in_inputPin, Callback in_callback, int sensitivity = 2) {
       inputPin = in_inputPin;
       callback = in_callback;
@@ -75,14 +78,20 @@ class AnalogParameterInput : public ParameterInput {
       inputPin = in_inputPin;
       envelope_number = in_envelope_number;
     }
-    
+
+    void setInverted(bool invert = true) {
+      inverted = invert;
+    }
 
     void loop () {
       read();
     }
 
     float get_normal_value(int value) {
-      return (float)value / 1023.0f;
+      if (inverted)
+        return 1.0f - ((float)value / 1023.0f);
+      else 
+        return (float)value / 1023.0f;
     }
 
     void read() {
@@ -93,18 +102,20 @@ class AnalogParameterInput : public ParameterInput {
         if (callback != NULL) {
           if (debug) {
             Serial.print(name);
-            Serial.print(": calling callback(");
+            Serial.print(F(": calling callback("));
             Serial.print(normal);
-            Serial.println(")");
+            Serial.println(F(")"));
           }      
           callback(normal);
         }
         if (target) {
           if (debug) {
             Serial.print(name);
-            Serial.print(": calling target setParamValueA(");
+            Serial.print(F(": calling target setParamValueA("));
             Serial.print(normal);
-            Serial.println(")");
+            Serial.print(F(")"));
+            if (inverted) Serial.print(F(" - inverted"));
+            Serial.println();
           }
           target->setParamValueA(normal);
         }

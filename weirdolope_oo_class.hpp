@@ -294,7 +294,7 @@ public:
               } else {
                 if(debug) {
                   Serial.print(name);
-                  Serial.println(": ENVELOPE_STATE_IDLE");
+                  Serial.println(F(": ENVELOPE_STATE_IDLE"));
                 }
                 envelopeLevel = 0.0f;
               }
@@ -344,7 +344,8 @@ public:
               {
                   changeState(ENVELOPE_STATE_IDLE);
               }
-          } /*else if (envelopeState==ENVELOPE_STATE_INVERTED_RELEASE) { 
+          } else if (envelopeState==ENVELOPE_STATE_INVERTED_RELEASE) { 
+              // TODO: this doesn't really do what we actually want it to
               if(debug) Serial.println("ENVELOPE_STATE_INVERTED_RELEASE");
               //damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
               //envelopeLevel *= damp;
@@ -354,7 +355,7 @@ public:
                   changeState(ENVELOPE_STATE_IDLE);
               }
               //if (inverted) envelopeLevel = 1.0f - envelopeLevel;
-          } */ else {
+          } else  {
               if(debug) {
                 Serial.print(name);
                 Serial.println(F(": UNKNOWN ENVELOPE STATE?"));
