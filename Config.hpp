@@ -41,9 +41,22 @@ void multi_trigger_off() {
 }
 
 void setFifthParameterValue(float normal) {
-  Serial.print("The F#fth Meat: ");
-  Serial.println(normal);
+  //Serial.print("The F#fth Meat: ");
+  //Serial.println(normal);
+  //global_inversion = map(normal, 0.0, 1.0, -1.0f, 1.0f);
+  /*global_inversion = ((float)map(normal*1000, 0, 1000, -1000, 1000))/1000.0f;
+  if (global_inversion<0.0f)
+    global_offset = 1.0f;
+  else 
+    global_offset = 0.0f;
+  Serial.print("global_inversion: ");
+  Serial.print(global_inversion);
+  Serial.print(", global_offset: ");
+  Serial.print(global_offset);*/
+  //effective_TIME_MULT = map(normal*1000.0, 0, 1000, 1, 500);
+  effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
 }
+
 
 void setup_envelopes() {
   
@@ -75,8 +88,10 @@ void setup_envelopes() {
       //Serial.println("trigger envelope 1 OFF");
       //envelopes[1]->gate_off();
       envelopes[1].stop();
+      envelopes[3].invert_release();
     } else if (new_stage==Envelope::ENVELOPE_STATE_IDLE) {    // if envelope 0 changes to IDLE stage, send envelope 1 to the invert_release stage
       envelopes[1].invert_release(); //|| new_stage==Envelope::ENVELOPE_STATE_IDLE
+      envelopes[3].invert_release();
     }
   });
 

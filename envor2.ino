@@ -9,11 +9,17 @@
 
 unsigned long last_ticked = 0;
 
+const float global_inversion = 1.0f;
+const float global_offset = 0.0f;
+
 #define TIME_MULT 50  // larger = faster envelopes
 #define TIME_BETWEEN_UPDATES  5  // ms to wait between updating envelopes
 
+unsigned long effective_TIME_MULT = TIME_MULT;
+unsigned long effective_TIME_BETWEEN_UPDATES = TIME_BETWEEN_UPDATES;
+
 unsigned long bpm_clock () {
-  return millis() * TIME_MULT; //millis();
+  return millis() * effective_TIME_MULT; //millis();
 }
 
 #include "weirdolope_oo_class.hpp"

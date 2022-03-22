@@ -261,7 +261,7 @@ public:
       float delta = 0.0f;
       float damp = 1.0f;
       float sustainLevel = 0.7f;
-      if (ttg > TIME_BETWEEN_UPDATES) {
+      if (ttg > effective_TIME_BETWEEN_UPDATES) {
           //nextEnvelopeUpdate += 1000;
           nextEnvelopeUpdate += 1000; //1000;
 
