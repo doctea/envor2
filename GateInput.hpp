@@ -2,7 +2,6 @@ char NEXT_GATE_INPUT_NAME = 'M';
 
 class GateInput {
   protected:
-    int inputPin;
     using Callback = void (*)();
 
     Callback gate_on_callback = NULL ;
@@ -23,6 +22,7 @@ class GateInput {
 
   public:
     char name;
+    int inputPin;
     
     GateInput() {
       name = NEXT_GATE_INPUT_NAME++;
@@ -37,6 +37,8 @@ class GateInput {
       target = &in_target;
       Serial.print("GateInput instantiated with name ");
       Serial.print(name);
+      Serial.print(" and pin ");
+      Serial.print(inputPin);
       Serial.print(", passed envelope ");
       Serial.println((uint32_t) target);
       //gate_on_callback = in_gate_on_callback;
@@ -50,6 +52,8 @@ class GateInput {
       gate_off_callback = in_gate_off_callback;
       Serial.print("GateInput instantiated with name ");
       Serial.print(name);
+      Serial.print(" and pin ");
+      Serial.print(inputPin);
       Serial.println(", passed callbacks ");
     }
 
@@ -61,11 +65,11 @@ class GateInput {
     virtual bool read_value() {};
 
     void loop() {
-      if (debug) {
+      /*if (debug) {
         Serial.print(name);
         Serial.print(": GateInput loop() called ");
         Serial.println((uint32_t) this);
-      }
+      }*/
       /*if (reading) {
         Serial.println("high?");
       }*/
@@ -178,8 +182,19 @@ class DigitalGateInput : public GateInput {
   public:
     DigitalGateInput(int in_inputPin, Envelope &target)
       : GateInput{in_inputPin, target } {}
+    DigitalGateInput(int in_inputPin, Callback in_gate_on_callback, Callback in_gate_off_callback) 
+      : GateInput (in_inputPin, in_gate_on_callback, in_gate_off_callback) 
+      {}
     
     bool read_value() {
-      return digitalRead(inputPin);
+      int value = digitalRead(inputPin);
+      if (debug) {
+        Serial.print(name);
+        Serial.print(F(": read_value from pin "));
+        Serial.print(inputPin);
+        Serial.print(F(" is "));
+        Serial.println(value);
+      }
+      return value;
     }
 };

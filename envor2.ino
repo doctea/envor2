@@ -1,10 +1,12 @@
 #include "MCP_DAC.h"
 
-#define IN_GATE_A   A0
+#define IN_GATE_A  A7
+//#define IN_GATE_A  A0
+#define IN_CV_A    A0
 #define IN_KNOB_A  A1
 #define IN_KNOB_B  A2
-#define IN_KNOB_C  A3
-#define IN_KNOB_D  A4
+#define IN_KNOB_C  A4
+#define IN_KNOB_D  A3
 #define IN_KNOB_E  A5
 
 unsigned long last_ticked = 0;
@@ -99,7 +101,7 @@ void loop() {
         Serial.print(F("Didn't find a gate named "));
         Serial.println((char)incomingByte);
       }
-    } else if (incomingByte=='W' || incomingByte=='X' || incomingByte=='Y' || incomingByte=='Z' || incomingByte=='[') {
+    } else if (incomingByte=='W' || incomingByte=='X' || incomingByte=='Y' || incomingByte=='Z' || incomingByte=='[' || incomingByte=='\\') {
       bool found = false;
       for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
         if (param_inputs[i].name==incomingByte) {

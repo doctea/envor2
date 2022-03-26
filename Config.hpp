@@ -1,10 +1,11 @@
 #define NUM_ENVELOPES      4
 #define NUM_GATE_INPUTS    1
-#define NUM_PARAM_INPUTS   5
+#define NUM_PARAM_INPUTS   6
 
 void multi_trigger_on();
 void multi_trigger_off();
 void setFifthParameterValue(float normal);
+void setCVParameter(float normal);
 
 Envelope        envelopes[NUM_ENVELOPES] = {
   Envelope(), 
@@ -12,12 +13,20 @@ Envelope        envelopes[NUM_ENVELOPES] = {
   Envelope(),
   Envelope(),
 };
+
+// if using an analog pin as the gate, use this
 AnalogGateInput gate_inputs[NUM_GATE_INPUTS] = {
-  /*AnalogGateInput(IN_GATE_A, envelopes[0]),       // this works but uses up a lot of -- almost too much -- memory
-  AnalogGateInput(IN_GATE_A, envelopes[2]),
-  AnalogGateInput(IN_GATE_A, envelopes[3]),*/
+  //AnalogGateInput(IN_GATE_A, envelopes[0]),       // this works but uses up a lot of -- almost too much -- memory
+  //AnalogGateInput(IN_GATE_A, envelopes[2]),
+  //AnalogGateInput(IN_GATE_A, envelopes[3]),
   AnalogGateInput(IN_GATE_A, &multi_trigger_on, &multi_trigger_off),
 };
+
+// if using a digital pin as the gate, use this
+/*DigitalGateInput gate_inputs[NUM_GATE_INPUTS] = {
+  DigitalGateInput(IN_GATE_A, &multi_trigger_on, &multi_trigger_off),
+};*/
+
 AnalogParameterInput  param_inputs[NUM_PARAM_INPUTS] = {
   //NULL, NULL
   AnalogParameterInput(IN_KNOB_B, envelopes[0]),
@@ -25,6 +34,7 @@ AnalogParameterInput  param_inputs[NUM_PARAM_INPUTS] = {
   AnalogParameterInput(IN_KNOB_C, envelopes[2]),
   AnalogParameterInput(IN_KNOB_D, envelopes[3]),
   AnalogParameterInput(IN_KNOB_E, &setFifthParameterValue),
+  AnalogParameterInput(IN_CV_A,   &setCVParameter),
 };
 
 
@@ -38,6 +48,15 @@ void multi_trigger_off() {
   envelopes[0].gate_off();
   envelopes[2].gate_off();
   envelopes[3].gate_off();
+}
+
+float cvParameterValue = 0.0f;
+float knobParameterValue = 0.0f;
+
+void updateEffectiveTimeBetweenUpdates (float normal) {
+  //float val = constrain(normal + cvParameterValue), 0.0
+  if (normal>1.0f) normal = 1.0f;
+  effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
 }
 
 void setFifthParameterValue(float normal) {
@@ -54,9 +73,18 @@ void setFifthParameterValue(float normal) {
   Serial.print(", global_offset: ");
   Serial.print(global_offset);*/
   //effective_TIME_MULT = map(normal*1000.0, 0, 1000, 1, 500);
-  effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
+  //effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
+  //updateEffectiveTimeBetweenUpdates(normal, 
+  knobParameterValue = normal;
+  updateEffectiveTimeBetweenUpdates(knobParameterValue + cvParameterValue);
 }
 
+void setCVParameter(float normal) {
+  //Serial.print("setCVParameter: ");
+  //Serial.println(normal);
+  cvParameterValue = normal;
+  updateEffectiveTimeBetweenUpdates(knobParameterValue + cvParameterValue);
+}
 
 void setup_envelopes() {
   
@@ -119,6 +147,8 @@ void setup_gates() {
     Serial.print(i);
     Serial.print(F(" named "));
     Serial.print(gate_inputs[i].name);
+    Serial.print(F(" with pin "));
+    Serial.print(gate_inputs[i].inputPin);
     Serial.print(F(" at address "));
     Serial.println((uint32_t) &gate_inputs[i]);
   }
