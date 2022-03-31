@@ -1,8 +1,8 @@
 #include "MCP_DAC.h"
 
-#define IN_GATE_A  A7
+#define IN_GATE_A  A0
 //#define IN_GATE_A  A0
-#define IN_CV_A    A0
+#define IN_CV_A    A7
 #define IN_KNOB_A  A1
 #define IN_KNOB_B  A2
 #define IN_KNOB_C  A4

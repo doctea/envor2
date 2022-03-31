@@ -234,11 +234,11 @@ public:
     //  envelopeLevel = 0.0;
 
     if (setterCallback!=NULL) {
-      if (debug) {
+      /*if (debug) {
         Serial.print(name);
         Serial.print(F(": calling setterCallback for value "));
         Serial.println(envelopeLevel);
-      }
+      }*/
       setterCallback(envelopeLevel, force);
     } else if (debug) {
       Serial.print(name);
@@ -292,10 +292,10 @@ public:
                   Serial.println(envelopeLevel);
                 }
               } else {
-                if(debug) {
+                /*if(debug) {
                   Serial.print(name);
                   Serial.println(F(": ENVELOPE_STATE_IDLE"));
-                }
+                }*/
                 envelopeLevel = 0.0f;
               }
           } else if (envelopeState==ENVELOPE_STATE_ATTACK) {
