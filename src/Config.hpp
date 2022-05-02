@@ -55,7 +55,7 @@ float knobParameterValue = 0.0f;
 
 void updateEffectiveTimeBetweenUpdates (float normal) {
   //float val = constrain(normal + cvParameterValue), 0.0
-  if (normal>1.0f) normal = 1.0f;
+  if (normal>1.0f) normal = 1.0f - (normal-1.0f); //wrapround sorta thing
   effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
 }
 

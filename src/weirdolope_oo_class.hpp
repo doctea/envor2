@@ -256,7 +256,7 @@ public:
       EnvB = EnvA+1;
       EnvAlpha = constrain( x - EnvA, 0.0f, 1.0f );
   
-      long ttg = bpm_clock() - lastUpdatedClock; //micros();
+      unsigned long long ttg = bpm_clock() - lastUpdatedClock; //micros();
 
       float delta = 0.0f;
       float damp = 1.0f;
@@ -372,7 +372,7 @@ public:
       } else if (debug) {
         Serial.print(name);
         Serial.print(F(": ttg >0 (is "));
-        Serial.print(ttg);
+        Serial.print((unsigned long)ttg);
         Serial.print(F(") and bpm_clock is "));
         Serial.println((unsigned long)bpm_clock());
         //Serial.print(F(" and nextEnvelopeUpdate is"));

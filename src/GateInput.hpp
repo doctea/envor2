@@ -62,7 +62,9 @@ class GateInput {
     }
 
     // read current value directly
-    virtual bool read_value() {};
+    virtual bool read_value(){
+      return false;
+    };
 
     void loop() {
       /*if (debug) {

@@ -1,4 +1,4 @@
-#include "MCP_DAC.h"
+#include <Arduino.h>
 
 #define IN_GATE_A  A0
 //#define IN_GATE_A  A0
@@ -20,10 +20,11 @@ const float global_offset = 0.0f;
 unsigned long effective_TIME_MULT = TIME_MULT;
 unsigned long effective_TIME_BETWEEN_UPDATES = TIME_BETWEEN_UPDATES;
 
-unsigned long bpm_clock () {
+unsigned long long bpm_clock () {
   return millis() * effective_TIME_MULT; //millis();
 }
 
+#include "MCP_DAC.h"
 #include "weirdolope_oo_class.hpp"
 #include "GateInput.hpp"
 #include "ParameterInput.hpp"
@@ -66,7 +67,7 @@ void loop() {
       MCP.reset();
       setup_mcp();
 
-      for (int a = 0 ; a < MCP.maxValue() ; a++) {
+      for (unsigned int a = 0 ; a < MCP.maxValue() ; a++) {
         callback_a(random(0,MCP.maxValue()-a), true);
         callback_b(random(0,a), true);
       }
