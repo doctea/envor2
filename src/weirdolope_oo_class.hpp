@@ -114,6 +114,8 @@ private:
   float envelopeStopLevel = 0.0001f;
   unsigned long nextEnvelopeUpdate = 0;
 
+  float base_level;
+
   float paramValueA = 0.0f;
   
   float lerp( float y0, float y1, float alpha )
@@ -219,6 +221,10 @@ public:
     }
     envelopeState = new_state;
   }
+
+  void setBaseLevel(float norm_value) {
+    base_level = norm_value;
+  }
   
   void setEnvelope(float envelopeLevel, bool force = false)
   {
@@ -226,6 +232,8 @@ public:
     //cvValues[ CV_CHANNEL_ENVELOPE ] = envelopeLevel;
     //Serial.print("setEnvelope passed ");
     //Serial.println(envelopeLevel);
+
+    envelopeLevel += base_level;
     
     if (envelopeLevel>envelopeStopLevel && inverted)
       envelopeLevel = 1.0-envelopeLevel;

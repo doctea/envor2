@@ -59,6 +59,11 @@ void updateEffectiveTimeBetweenUpdates (float normal) {
   effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
 }
 
+void setSecondaryBaseLevel(float norm_value) {
+  envelopes[1].setBaseLevel(norm_value);
+  envelopes[3].setBaseLevel(norm_value);
+}
+
 void setFifthParameterValue(float normal) {
   //Serial.print("The F#fth Meat: ");
   //Serial.println(normal);
@@ -76,14 +81,24 @@ void setFifthParameterValue(float normal) {
   //effective_TIME_BETWEEN_UPDATES = map(normal*1000.0, 0, 1000, 0, 500);
   //updateEffectiveTimeBetweenUpdates(normal, 
   knobParameterValue = normal;
-  updateEffectiveTimeBetweenUpdates(knobParameterValue + cvParameterValue);
+  //updateEffectiveTimeBetweenUpdates(knobParameterValue + cvParameterValue);
+  if (knobParameterValue<0.5) {
+    setSecondaryBaseLevel((knobParameterValue*2.0) + cvParameterValue);
+  } else {
+    updateEffectiveTimeBetweenUpdates(((knobParameterValue-0.5)*2.0) + cvParameterValue);
+  }
 }
 
 void setCVParameter(float normal) {
   //Serial.print("setCVParameter: ");
   //Serial.println(normal);
   cvParameterValue = normal;
-  updateEffectiveTimeBetweenUpdates(knobParameterValue + cvParameterValue);
+  //updateEffectiveTimeBetweenUpdates(knobParameterValue + cvParameterValue);
+  if (knobParameterValue<0.5) {
+    setSecondaryBaseLevel((knobParameterValue*2.0) + cvParameterValue);
+  } else {
+    updateEffectiveTimeBetweenUpdates(((knobParameterValue-0.5)*2.0) + cvParameterValue);
+  }
 }
 
 void setup_envelopes() {
