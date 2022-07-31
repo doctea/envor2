@@ -8,10 +8,10 @@ void setFifthParameterValue(float normal);
 void setCVParameter(float normal);
 
 Envelope        envelopes[NUM_ENVELOPES] = {
-  Envelope(), 
-  Envelope(),
-  Envelope(),
-  Envelope(),
+  Envelope("A"), 
+  Envelope("B"),
+  Envelope("C"),
+  Envelope("D"),
 };
 
 // if using an analog pin as the gate, use this
@@ -110,7 +110,7 @@ void setup_envelopes() {
       Serial.print(F("in setup_envelopes, got envelope "));
       Serial.print(i);
       Serial.print(F(" named "));
-      Serial.print(envelopes[i].name);
+      Serial.print(envelopes[i].label);
       Serial.print(F(" address "));
       Serial.println((uint32_t) &envelopes[i]);
   }

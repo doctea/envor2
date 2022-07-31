@@ -25,9 +25,10 @@
 // Now modified quite a bit by Tristan Rowley with full thanks and royalties ;-) to Russell Borogove for the basis!
 //  Seems to work OK on an Arduino Nano
 
-char NEXT_ENVELOPE_NAME = 'A';
+#include "Parameter.h"
 
-class Envelope {
+//char NEXT_ENVELOPE_NAME = 'A';
+class Envelope : public BaseParameter {
   // attack rate, amplitude change per millisec
   using SetterCallback = void (*)(float,bool);
   using StateChangeCallback = void (*)(int, int);
@@ -136,12 +137,9 @@ private:
 
 public:
 
-  char name;
-
-  Envelope() {
-    name = NEXT_ENVELOPE_NAME++;
+  Envelope(char *label) : BaseParameter(label) {
     Serial.print("Instantiated envelope ");
-    Serial.println(name);
+    Serial.println(label);
   }
 
   static const int ENVELOPE_STATE_IDLE = 0;
@@ -203,13 +201,13 @@ public:
     slewRate = in_slew;
   }
 
-  void setParamValueA(float paramValue) {
-    if (debug) {
-      Serial.print(name);
-      Serial.print(F(": Setting paramvalue to "));
-      Serial.println(paramValue);
-    } 
-    paramValueA = paramValue;
+  void setParamValue(double paramValue, double range = 1.0) {
+    static double last_value = 0.0;
+    if (paramValue==last_value) return;
+    if (paramValue>=1.0) 
+      this->changeState(true);
+    else
+      this->changeState(false);
   }
 
   void changeState(int new_state) {
@@ -249,7 +247,7 @@ public:
       }*/
       setterCallback(envelopeLevel, force);
     } else if (debug) {
-      Serial.print(name);
+      Serial.print(label);
       Serial.println(F(": setterCallback is NULL?!"));
     }
   }
@@ -277,7 +275,7 @@ public:
           if (envelopeState==ENVELOPE_STATE_IDLE) {
               if (envelopeLevel>envelopeStopLevel && slewRate>0.01) {
                 if (debug) {
-                  Serial.print(name);
+                  Serial.print(label);
                   Serial.print(F(": stageStartLevel is "));
                   Serial.print(stageStartLevel);
                   Serial.print(F(", with slewRate at "));
@@ -308,7 +306,7 @@ public:
               }
           } else if (envelopeState==ENVELOPE_STATE_ATTACK) {
               if(debug) {
-                Serial.print(name);
+                Serial.print(label);
                 Serial.println(F(": ENVELOPE_STATE_ATTACK"));
               }
               delta = lerp( AttackRateTable[EnvA], AttackRateTable[EnvB], EnvAlpha );
@@ -320,7 +318,7 @@ public:
               }
           } else if (envelopeState==ENVELOPE_STATE_DECAY) {
               if(debug) {
-                Serial.print(name);
+                Serial.print(label);
                 Serial.println(F(": ENVELOPE_STATE_DECAY"));
               }
               damp = lerp( DecayRateTable[EnvA], DecayRateTable[EnvB], EnvAlpha );
@@ -332,7 +330,7 @@ public:
               }
           } else if (envelopeState==ENVELOPE_STATE_SUSTAIN) {
               if(debug) {
-                Serial.print(name);
+                Serial.print(label);
                 Serial.println(F(": ENVELOPE_STATE_SUSTAIN"));
               }
               damp = lerp( SustainRateTable[EnvA], SustainRateTable[EnvB], EnvAlpha );
@@ -343,7 +341,7 @@ public:
               }
           }  else if (envelopeState==ENVELOPE_STATE_RELEASE) {
               if(debug) {
-                Serial.print(name);
+                Serial.print(label);
                 Serial.println(F(": ENVELOPE_STATE_RELEASE"));
               }
               damp = lerp( ReleaseRateTable[EnvA], ReleaseRateTable[EnvB], EnvAlpha );
@@ -365,7 +363,7 @@ public:
               //if (inverted) envelopeLevel = 1.0f - envelopeLevel;
           } else  {
               if(debug) {
-                Serial.print(name);
+                Serial.print(label);
                 Serial.println(F(": UNKNOWN ENVELOPE STATE?"));
               }
           }
@@ -378,7 +376,7 @@ public:
           setEnvelope(envelopeLevel);
           //return;
       } else if (debug) {
-        Serial.print(name);
+        Serial.print(label);
         Serial.print(F(": ttg >0 (is "));
         Serial.print((unsigned long)ttg);
         Serial.print(F(") and bpm_clock is "));

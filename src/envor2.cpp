@@ -77,7 +77,7 @@ void loop() {
     } else if (incomingByte=='A' || incomingByte=='B' || incomingByte=='C' || incomingByte=='D') {
       bool found = false;
       for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-        if (envelopes[i].name==incomingByte) {
+        if (envelopes[i].matches_label(incomingByte)) {
           Serial.print(F("toggling debug on "));
           Serial.println((char)incomingByte);
           envelopes[i].setDebug();
@@ -91,7 +91,7 @@ void loop() {
     } else if (incomingByte=='M' || incomingByte=='N' || incomingByte=='O' || incomingByte=='P') {
       bool found = false;
       for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
-        if (gate_inputs[i].name==incomingByte) {
+        if (gate_inputs[i].matches_label(incomingByte)) {
           Serial.print(F("toggling debug on "));
           Serial.println((char)incomingByte);
           gate_inputs[i].setDebug();
