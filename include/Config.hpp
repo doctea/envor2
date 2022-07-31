@@ -1,13 +1,44 @@
+#ifndef CONFIG__INCLUDED
+#define CONFIG__INCLUDED
+
 #define NUM_ENVELOPES      4
 #define NUM_GATE_INPUTS    1
 #define NUM_PARAM_INPUTS   6
 
+#include "parameter_inputs/DigitalParameterInput.h"
+
+#include "weirdolope_oo_class.hpp"
+
+#include "MCP.h"
+
+#define TIME_BETWEEN_UPDATES  20
+#define TIME_MULT 5
+
+#define IN_GATE_A  A0
+#define IN_CV_A    A7
+#define IN_KNOB_A  A1
+#define IN_KNOB_B  A2
+#define IN_KNOB_C  A4
+#define IN_KNOB_D  A3
+#define IN_KNOB_E  A5
+
+#define PIN_SDA SDA
+#define PIN_SCL SCL
+
+void multi_trigger(bool status);
+
 void multi_trigger_on();
 void multi_trigger_off();
-void setFifthParameterValue(float normal);
-void setCVParameter(float normal);
+void setFifthParameterValue(double normal);
+void setCVParameter(double normal);
 
-Envelope        envelopes[NUM_ENVELOPES] = {
+const float global_inversion = 1.0f;
+const float global_offset = 0.0f;
+
+unsigned long effective_TIME_MULT = TIME_MULT;
+unsigned long effective_TIME_BETWEEN_UPDATES = TIME_BETWEEN_UPDATES;
+
+Envelope envelopes[NUM_ENVELOPES] = {
   Envelope("A"), 
   Envelope("B"),
   Envelope("C"),
@@ -15,19 +46,31 @@ Envelope        envelopes[NUM_ENVELOPES] = {
 };
 
 // if using an analog pin as the gate, use this
-AnalogGateInput gate_inputs[NUM_GATE_INPUTS] = {
+DigitalParameterInput *gate_inputs[NUM_GATE_INPUTS];
+/* = { //NUM_GATE_INPUTS] = {
   //AnalogGateInput(IN_GATE_A, envelopes[0]),       // this works but uses up a lot of -- almost too much -- memory
   //AnalogGateInput(IN_GATE_A, envelopes[2]),
   //AnalogGateInput(IN_GATE_A, envelopes[3]),
-  AnalogGateInput(IN_GATE_A, &multi_trigger_on, &multi_trigger_off),
-};
+  new DigitalParameterInput(IN_GATE_A, &multi_trigger_on, &multi_trigger_off),
+};*/
 
 // if using a digital pin as the gate, use this
 /*DigitalGateInput gate_inputs[NUM_GATE_INPUTS] = {
   DigitalGateInput(IN_GATE_A, &multi_trigger_on, &multi_trigger_off),
 };*/
 
-AnalogParameterInput  param_inputs[NUM_PARAM_INPUTS] = {
+#include "voltage_sources/ArduinoPinVoltageSource.h"
+
+VoltageSourceBase *voltage_sources[] = {
+  new ArduinoPinVoltageSource(IN_KNOB_A),
+  new ArduinoPinVoltageSource(IN_KNOB_B),
+  new ArduinoPinVoltageSource(IN_KNOB_C),
+  new ArduinoPinVoltageSource(IN_KNOB_D),
+  new ArduinoPinVoltageSource(IN_KNOB_E),
+  new ArduinoPinVoltageSource(IN_CV_A),
+};
+
+/*AnalogParameterInput param_inputs[NUM_PARAM_INPUTS] = {
   //NULL, NULL
   AnalogParameterInput(IN_KNOB_B, envelopes[0]),
   AnalogParameterInput(IN_KNOB_A, envelopes[1]),
@@ -35,8 +78,31 @@ AnalogParameterInput  param_inputs[NUM_PARAM_INPUTS] = {
   AnalogParameterInput(IN_KNOB_D, envelopes[3]),
   AnalogParameterInput(IN_KNOB_E, &setFifthParameterValue),
   AnalogParameterInput(IN_CV_A,   &setCVParameter),
-};
+};*/
+#include "parameter_inputs/AnalogParameterInputBase.h"
+#include "parameter_inputs/VoltageParameterInput.h"
+#include "parameters/Parameter.h"
+#include "parameters/FunctionParameter.h"
 
+FunctionParameter set_fifth_parameter = FunctionParameter("Fifth parameter",  &setFifthParameterValue);
+FunctionParameter set_cv_parameter =    FunctionParameter("CV parameter",     &setCVParameter);
+
+BaseParameterInput *param_inputs[NUM_PARAM_INPUTS]; /* = {
+  new VoltageParameterInput<BaseParameter>('A', voltage_sources[0], 
+    new Parameter<Envelope> ("Env A type", envelopes[1], &Envelope::setParamValue)
+  ),
+  new VoltageParameterInput<BaseParameter>('B', voltage_sources[1], 
+    new Parameter<Envelope> ("Env B type", envelopes[0], &Envelope::setParamValue)
+  ),
+  new VoltageParameterInput<BaseParameter>('C', voltage_sources[2], 
+    new Parameter<Envelope> ("Env C type", envelopes[2], &Envelope::setParamValue)
+  ),
+  new VoltageParameterInput<BaseParameter>('D', voltage_sources[3], 
+    new Parameter<Envelope> ("End D type", envelopes[3], &Envelope::setParamValue)
+  ),
+  new VoltageParameterInput<BaseParameter>  ('E', voltage_sources[4], &set_fifth_parameter),
+  new VoltageParameterInput<BaseParameter>  ('F', voltage_sources[5], &set_cv_parameter)
+};*/
 
 // use these function insteads of adding multple GateInput objects to reduce memory usage
 void multi_trigger_on() {
@@ -64,7 +130,7 @@ void setSecondaryBaseLevel(float norm_value) {
   envelopes[3].setBaseLevel(norm_value);
 }
 
-void setFifthParameterValue(float normal) {
+void setFifthParameterValue(double normal) {
   //Serial.print("The F#fth Meat: ");
   //Serial.println(normal);
   //global_inversion = map(normal, 0.0, 1.0, -1.0f, 1.0f);
@@ -89,7 +155,7 @@ void setFifthParameterValue(float normal) {
   }
 }
 
-void setCVParameter(float normal) {
+void setCVParameter(double normal) {
   //Serial.print("setCVParameter: ");
   //Serial.println(normal);
   cvParameterValue = normal;
@@ -102,7 +168,14 @@ void setCVParameter(float normal) {
 }
 
 void setup_envelopes() {
+  Serial.println("setup_envelopes.."); Serial.flush();
   
+  /*envelopes[0] = new Envelope("A");
+  envelopes[1] = new Envelope("B");
+  envelopes[2] = new Envelope("C");
+  envelopes[3] = new Envelope("D");
+  Serial.println("did instantiation.."); Serial.flush();*/
+
   // set up envelopes
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     //envelopes[i] = new Envelope();
@@ -114,7 +187,6 @@ void setup_envelopes() {
       Serial.print(F(" address "));
       Serial.println((uint32_t) &envelopes[i]);
   }
-
 
   // for envelope 0, use mcp callback_a, trigger envelope 1 when reaching RELEASE stage, turn off envelope 1 when reach SUSTAIN mode
   envelopes[0].registerSetterCallback(&callback_a);
@@ -157,43 +229,53 @@ void setup_gates() {
   // analog input on pin IN_GATE_A sends gate_on / gate_off to envelope 0
   //gate_inputs[0] = new AnalogGateInput(IN_GATE_A, envelopes[0]);
 
+  Serial.println("setup_gates....."); Serial.flush();
+  gate_inputs[0] = new DigitalParameterInput(IN_GATE_A, &multi_trigger_on, &multi_trigger_off);
+
   for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
     Serial.print(F("in setup_gates, got GateInput "));
     Serial.print(i);
     Serial.print(F(" named "));
-    Serial.print(gate_inputs[i].name);
-    Serial.print(F(" with pin "));
-    Serial.print(gate_inputs[i].inputPin);
+    Serial.print(gate_inputs[i]->name);
+    //Serial.print(F(" with pin "));
+    //Serial.print(gate_inputs[i]->inputPin);
     Serial.print(F(" at address "));
-    Serial.println((uint32_t) &gate_inputs[i]);
+    Serial.println((uint32_t) gate_inputs[i]);
   }
 }
 
 void setup_parameters() {
+  Serial.println("setup_parameters...."); Serial.flush();
 
-  param_inputs[3].setInverted(true);    // these are wired up back-to-front in my build, so invert them
-  param_inputs[4].setInverted(true);    // these are wired up back-to-front in my build, so invert them
+  param_inputs[0] = new VoltageParameterInput<BaseParameter>('A', voltage_sources[0], 
+    new Parameter<Envelope> ("Env A type", &envelopes[1], &Envelope::setParamValue)
+  );
+  param_inputs[1] = new VoltageParameterInput<BaseParameter>('B', voltage_sources[1], 
+    new Parameter<Envelope> ("Env B type", &envelopes[0], &Envelope::setParamValue)
+  );
+  param_inputs[2] = new VoltageParameterInput<BaseParameter>('C', voltage_sources[2], 
+    new Parameter<Envelope> ("Env C type", &envelopes[2], &Envelope::setParamValue)
+  );
+  param_inputs[3] = new VoltageParameterInput<BaseParameter>('D', voltage_sources[3], 
+    new Parameter<Envelope> ("End D type", &envelopes[3], &Envelope::setParamValue)
+  );
+  param_inputs[4] = new VoltageParameterInput<BaseParameter>  ('E', voltage_sources[4], &set_fifth_parameter);
+  param_inputs[5] = new VoltageParameterInput<BaseParameter>  ('F', voltage_sources[5], &set_cv_parameter);
+
+  param_inputs[3]->setInverted(true);    // these are wired up back-to-front in my build, so invert them
+  param_inputs[4]->setInverted(true);    // these are wired up back-to-front in my build, so invert them
 
   for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
     Serial.print(F("in setup_parameters, got ParameterInput "));
     Serial.print(i);
     Serial.print(F(" named "));
-    Serial.print(param_inputs[i].name);
+    Serial.print(param_inputs[i]->name);
     Serial.print(F(" at address "));
     Serial.print((uint32_t) &param_inputs[i]);
-    if (param_inputs[i].inverted) Serial.print(F(" (is inverted)"));
+    if (param_inputs[i]->inverted) Serial.print(F(" (is inverted)"));
     Serial.println();
   }
-  //////// set up parameter controls
-  // for envelope 0, set ParamValueA when analogue input on pin IN_KNOB_B changes
-  /*param_inputs[0] = new AnalogParameterInput(IN_KNOB_B, [](float normal) {
-    envelopes[0]->setParamValueA(normal);
-  });
-  
-  // for envelope 1, set ParamValueA when analogue input on pin IN_KNOB_A changes
-  param_inputs[1] = new AnalogParameterInput(IN_KNOB_A, [](float normal) {
-    envelopes[1]->setParamValueA(normal);
-  });*/
-  //param_inputs[0] = new AnalogParameterInput(IN_KNOB_B, envelopes[0]);
-  //param_inputs[1] = new AnalogParameterInput(IN_KNOB_A, envelopes[1]);
+
 }
+
+#endif

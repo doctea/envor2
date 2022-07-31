@@ -1,3 +1,12 @@
+#ifndef MCP__INCLUDED
+#define MCP__INCLUDED
+
+#include "Config.hpp"
+
+#include "MCP_DAC.h"
+
+extern const float global_inversion;
+
 MCP4922 MCP;  // HW SPI
 MCP4922 MCP2;
 
@@ -60,3 +69,6 @@ void callback_a (float value, bool force = false) {
   }
   last_value = value;
 }*/
+
+
+#endif

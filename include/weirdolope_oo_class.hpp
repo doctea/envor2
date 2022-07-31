@@ -1,3 +1,6 @@
+#ifndef WEIRDOLOPE__INCLUDED
+#define WEIRDOLOPE__INCLUDED
+
 // Weirdolope - a minimal one-control envelope generator
 // (c) 2022 Russell Borogove
 // Use at your own risk
@@ -26,6 +29,10 @@
 //  Seems to work OK on an Arduino Nano
 
 #include "parameters/Parameter.h"
+
+#include "Clock.h"
+
+extern unsigned long effective_TIME_BETWEEN_UPDATES;
 
 //char NEXT_ENVELOPE_NAME = 'A';
 class Envelope : public BaseParameter {
@@ -138,8 +145,8 @@ private:
 public:
 
   Envelope(char *label) : BaseParameter(label) {
-    Serial.print("Instantiated envelope ");
-    Serial.println(label);
+    Serial.print("Instantiated envelope "); Serial.flush();
+    Serial.println(label); Serial.flush();
   }
 
   virtual bool matches_label(char *label) {
@@ -396,3 +403,5 @@ public:
       }
   }
 };
+
+#endif

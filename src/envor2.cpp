@@ -1,36 +1,14 @@
 #include <Arduino.h>
 
-#define IN_GATE_A  A0
-//#define IN_GATE_A  A0
-#define IN_CV_A    A7
-#define IN_KNOB_A  A1
-#define IN_KNOB_B  A2
-#define IN_KNOB_C  A4
-#define IN_KNOB_D  A3
-#define IN_KNOB_E  A5
+#include "Config.hpp"
 
-unsigned long last_ticked = 0;
-
-const float global_inversion = 1.0f;
-const float global_offset = 0.0f;
-
-#define TIME_MULT 50  // larger = faster envelopes
-#define TIME_BETWEEN_UPDATES  5  // ms to wait between updating envelopes
-
-unsigned long effective_TIME_MULT = TIME_MULT;
-unsigned long effective_TIME_BETWEEN_UPDATES = TIME_BETWEEN_UPDATES;
-
-unsigned long long bpm_clock () {
-  return millis() * effective_TIME_MULT; //millis();
-}
-
-#include "MCP_DAC.h"
+#include "Clock.h"
 #include "weirdolope_oo_class.hpp"
 #include "parameter_inputs/DigitalParameterInput.h"
 #include "voltage_sources/ArduinoPinVoltageSource.h"
 #include "MCP.h"
 
-#include "Config.hpp"
+#define WAIT_FOR_SERIAL
 
 void setup() {
   // put your setup code here, to run once:
@@ -40,9 +18,9 @@ void setup() {
     while (!Serial) {
       delay(1);
     }
-    while(1) {
+    /*while(1) {
       Serial.println("STARTING!");
-    }
+    }*/
   #endif
   Serial.println(__FILE__);
 
@@ -50,8 +28,11 @@ void setup() {
   setup_mcp();
 
   setup_envelopes();
+  Serial.println("finished setup_envelopes"); Serial.flush();
   setup_gates();
+  Serial.println("finished setup_gates"); Serial.flush();
   setup_parameters();
+  Serial.println("finished setup_parameters"); Serial.flush();
   
   //////// start the envelopes (ie send initial value)
   /*for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
@@ -64,7 +45,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  //Serial.println(F("loop()===>"));
+  Serial.println(F("loop()===>"));
 
   if (Serial.available() > 0) {
     // read the incoming byte:
@@ -80,15 +61,15 @@ void loop() {
         callback_b(random(0,a), true);
       }
       
-      envelopes[0]->begin();
-      envelopes[1]->begin();
+      envelopes[0].begin();
+      envelopes[1].begin();
     } else if (incomingByte=='A' || incomingByte=='B' || incomingByte=='C' || incomingByte=='D') {
       bool found = false;
       for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-        if (envelopes[i]->matches_label(incomingByte)) {
+        if (envelopes[i].matches_label(incomingByte)) {
           Serial.print(F("toggling debug on "));
           Serial.println((char)incomingByte);
-          envelopes[i]->setDebug();
+          envelopes[i].setDebug();
           found = true;
         }
       }
@@ -141,7 +122,7 @@ void loop() {
     //if (envelopes[i]!=NULL) {
       //Serial.print("loop calling updateEnvelope() against ");
       //Serial.println((uint32_t) &envelopes[i]);
-      envelopes[i]->updateEnvelope();
+      envelopes[i].updateEnvelope();
     //}
   }
 
