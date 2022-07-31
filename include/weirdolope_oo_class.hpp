@@ -25,7 +25,7 @@
 // Now modified quite a bit by Tristan Rowley with full thanks and royalties ;-) to Russell Borogove for the basis!
 //  Seems to work OK on an Arduino Nano
 
-#include "Parameter.h"
+#include "parameters/Parameter.h"
 
 //char NEXT_ENVELOPE_NAME = 'A';
 class Envelope : public BaseParameter {
@@ -142,6 +142,13 @@ public:
     Serial.println(label);
   }
 
+  virtual bool matches_label(char *label) {
+    return (strcmp(this->label, label)==0);
+  }
+  virtual bool matches_label(char label) {
+    return this->label[0]==label && this->label[1] == '\0';
+  }
+
   static const int ENVELOPE_STATE_IDLE = 0;
   //static const int ENVELOPE_STATE_SLEW_TO_STOP = 1;
   static const int ENVELOPE_STATE_ATTACK =  1;
@@ -201,6 +208,9 @@ public:
     slewRate = in_slew;
   }
 
+  void setParamValue(double paramValue) {
+    this->setParamValue(paramValue, 1.0);
+  }
   void setParamValue(double paramValue, double range = 1.0) {
     static double last_value = 0.0;
     if (paramValue==last_value) return;

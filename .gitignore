@@ -5,3 +5,7 @@
 .vscode/ipch
 *.backup
 *.patch
+__offcuts/*
+lib/
+test/
+include/README

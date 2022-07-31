@@ -26,8 +26,8 @@ unsigned long long bpm_clock () {
 
 #include "MCP_DAC.h"
 #include "weirdolope_oo_class.hpp"
-#include "GateInput.hpp"
-#include "ParameterInput.hpp"
+#include "parameter_inputs/DigitalParameterInput.h"
+#include "voltage_sources/ArduinoPinVoltageSource.h"
 #include "MCP.h"
 
 #include "Config.hpp"
@@ -72,15 +72,15 @@ void loop() {
         callback_b(random(0,a), true);
       }
       
-      envelopes[0].begin();
-      envelopes[1].begin();
+      envelopes[0]->begin();
+      envelopes[1]->begin();
     } else if (incomingByte=='A' || incomingByte=='B' || incomingByte=='C' || incomingByte=='D') {
       bool found = false;
       for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
-        if (envelopes[i].matches_label(incomingByte)) {
+        if (envelopes[i]->matches_label(incomingByte)) {
           Serial.print(F("toggling debug on "));
           Serial.println((char)incomingByte);
-          envelopes[i].setDebug();
+          envelopes[i]->setDebug();
           found = true;
         }
       }
@@ -88,7 +88,7 @@ void loop() {
         Serial.print(F("Didn't find an enveloped named "));
         Serial.println((char)incomingByte);
       }
-    } else if (incomingByte=='M' || incomingByte=='N' || incomingByte=='O' || incomingByte=='P') {
+    /*} else if (incomingByte=='M' || incomingByte=='N' || incomingByte=='O' || incomingByte=='P') {
       bool found = false;
       for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
         if (gate_inputs[i].matches_label(incomingByte)) {
@@ -101,14 +101,14 @@ void loop() {
       if (!found) {
         Serial.print(F("Didn't find a gate named "));
         Serial.println((char)incomingByte);
-      }
+      }*/
     } else if (incomingByte=='W' || incomingByte=='X' || incomingByte=='Y' || incomingByte=='Z' || incomingByte=='[' || incomingByte=='\\') {
       bool found = false;
       for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
-        if (param_inputs[i].name==incomingByte) {
+        if (param_inputs[i]->matches_label(incomingByte)) {
           Serial.print(F("toggling debug on "));
           Serial.println((char)incomingByte);
-          param_inputs[i].setDebug();
+          param_inputs[i]->toggleDebug();
           found = true;
         }
       }
@@ -121,19 +121,19 @@ void loop() {
 
   for (int i = 0 ; i < NUM_PARAM_INPUTS ; i++) {
      //if (param_inputs[i]) 
-       param_inputs[i].loop();
+       param_inputs[i]->loop();
   }
 
   for (int i = 0 ; i < NUM_GATE_INPUTS ; i++) {
     //if (gate_inputs[i]!=NULL)
-      gate_inputs[i].loop();
+      gate_inputs[i]->loop();
   }
 
   for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
     //if (envelopes[i]!=NULL) {
       //Serial.print("loop calling updateEnvelope() against ");
       //Serial.println((uint32_t) &envelopes[i]);
-      envelopes[i].updateEnvelope();
+      envelopes[i]->updateEnvelope();
     //}
   }
 
