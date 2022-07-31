@@ -36,6 +36,14 @@ void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(115200);
+  #ifdef WAIT_FOR_SERIAL
+    while (!Serial) {
+      delay(1);
+    }
+    while(1) {
+      Serial.println("STARTING!");
+    }
+  #endif
   Serial.println(__FILE__);
 
   // start the MCP hardware output -- need to do this before envelopes are started!
