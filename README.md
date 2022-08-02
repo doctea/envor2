@@ -2,6 +2,8 @@
 
 Morphing, multi-ADSR Envelope generator sketch for Arduino Nano etc.
 
+This branch is refactored to use the 'parameters' library from my github, but DOES NOT WORK (probably not enough RAM to use all those stupid heavy classes i've written?)
+
 ## Acknowledgements
 
 with many thanks to Discord "synthesizers, yo" user Borogove for the help debugging the circuit and for the basis of the envelope generator (and hence thanks to user meem for the source samples that the envelope timings are based on)
